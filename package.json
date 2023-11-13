@@ -13,6 +13,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    
     "@ant-design/icons-vue": "^7.0.0",
     "@antv/x6": "^2.0.0",
     "@antv/x6-plugin-clipboard": "^2.0.0",
