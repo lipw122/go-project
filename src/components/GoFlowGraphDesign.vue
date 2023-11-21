@@ -17,6 +17,9 @@
             <a-button type="text" shape="circle" @click="openGraphFromFile">
               <img src="../assets/image/icon/open.svg" alt="打开go图" style="margin-bottom: 3px" />
             </a-button>
+            <a-button type="text" shape="circle" @click="updateNumber">
+              <img src="../assets/image/icon/updateGoFlowNumber.svg" alt="刷新编号" style="margin-bottom: 3px" />
+            </a-button>
             <a-radio-group v-model:value="graphMove" size="small" style="margin: 0 8px">
               <a-radio-button value="jiantou" type="text" shape="circle" @click="graphToolsResponse('jiantou')">
                 <img src="../assets/image/icon/shubiao-jiantou.svg" alt="箭头" style="margin-bottom: 5px" />
@@ -139,6 +142,8 @@ export default defineComponent({
     }
 
     const openGraphFromFile = ()=>{
+      const node = [];
+      const edge = [];
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'application/json';
@@ -152,8 +157,7 @@ export default defineComponent({
             const goGraphJSON = JSON.parse(content);
             graph.fromJSON(goGraphJSON);
             console.log(goGraphJSON);
-            const node = [];
-            const edge = [];
+
             console.log(goGraphJSON.cells.length);
             totalNodeNumber.value = 0;
             totalEdgeNumber.value = 0;
@@ -162,14 +166,13 @@ export default defineComponent({
             for (let i = 0; i < goGraphJSON.cells.length; i++) {
               if ( goGraphJSON.cells[i]?.shape === "edge" ) {
                 edge.push( goGraphJSON.cells[i] );
-                store.dispatch( 'addEdge', goGraphJSON.cells[i] );
                 totalEdgeNumber.value += 1;
               } else {
                 node.push( goGraphJSON.cells[i] );
-                store.dispatch( 'addNode', goGraphJSON.cells[i] );
-                totalNodeNumber.value += 1;
+                totalNodeNumber.value += 1
               }
             }
+
             console.log( totalNodeNumber.value );
             console.log( totalEdgeNumber.value );
 
@@ -178,6 +181,18 @@ export default defineComponent({
         reader.readAsText(file);
       };
       input.click();
+
+    }
+
+    const updateNumber = ()=>{
+      const allCells = graph.getCells();
+      for (let i = 0; i < allCells.length; i++) {
+        if ( allCells[i].isNode() ) {
+          allCells[i].setData({
+            goFlowNumer: allCells[i].getData().goFlowNumber,
+          });
+        }
+      }
     }
 
 
@@ -858,6 +873,20 @@ export default defineComponent({
 
       //[@2.6]node:mouseenter
       graph.on('node:mouseenter', ({node}) => {
+
+        // const allCells = graph.getCells();
+        // for (let i = 0; i < allCells.length; i++) {
+        //   if ( allCells[i].isNode() ) {
+        //     allCells[i].setData({
+        //       goFlowNumer: allCells[i].getData().goFlowNumber,
+        //     });
+        //   }
+        // }
+
+        // node.setData({
+        //   goFlowNumer: node.getData().goFlowNumber,
+        // });
+
         //链接桩显式
         const container = document.getElementById('container')!
         const ports = container.querySelectorAll(
@@ -1065,6 +1094,7 @@ export default defineComponent({
 
 
     return {
+      updateNumber,
       graphMove,
       saveGraphToFile,
       openGraphFromFile,
