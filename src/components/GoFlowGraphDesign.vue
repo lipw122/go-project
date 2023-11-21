@@ -11,8 +11,11 @@
 
           <div>
 
-            <a-button type="text" shape="circle" @click="1">
-              <img src="../assets/image/icon/saveGraph.svg" alt="保存go图" style="margin-bottom: 3px" />
+            <a-button type="text" shape="circle" @click="saveGraphToFile">
+              <img src="../assets/image/icon/save.svg" alt="保存go图" style="margin-bottom: 3px" />
+            </a-button>
+            <a-button type="text" shape="circle" @click="openGraphFromFile">
+              <img src="../assets/image/icon/open.svg" alt="打开go图" style="margin-bottom: 3px" />
             </a-button>
 
             {{screenHeight}}
@@ -20,7 +23,7 @@
             {{totalEdgeNumber}}
 
           </div>
-          
+
         </div>
 
         <div id = "panel">
@@ -97,6 +100,67 @@ export default defineComponent({
     const store = useStore();
 
 
+
+
+    const saveGraphToFile = ()=>{
+
+      const goGraphJson = graph.toJSON();
+      const content = JSON.stringify(goGraphJson);
+
+      const file = new Blob([content], { type: 'application/json'} );
+
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = 'goGraphData.json';
+      a.click();
+
+      //移除链接释放资源
+      URL.revokeObjectURL(url);
+
+    }
+
+    const openGraphFromFile = ()=>{
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = function(event) {
+        const file = (event.target as HTMLInputElement).files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const content = e.target.result;
+
+          if (typeof content === "string") {
+            const goGraphJSON = JSON.parse(content);
+            graph.fromJSON(goGraphJSON);
+            console.log(goGraphJSON);
+            const node = [];
+            const edge = [];
+            console.log(goGraphJSON.cells.length);
+            totalNodeNumber.value = 0;
+            totalEdgeNumber.value = 0;
+            store.state.node = [];
+            store.state.edge = [];
+            for (let i = 0; i < goGraphJSON.cells.length; i++) {
+              if ( goGraphJSON.cells[i]?.shape === "edge" ) {
+                edge.push( goGraphJSON.cells[i] );
+                store.dispatch( 'addEdge', goGraphJSON.cells[i] );
+                totalEdgeNumber.value += 1;
+              } else {
+                node.push( goGraphJSON.cells[i] );
+                store.dispatch( 'addNode', goGraphJSON.cells[i] );
+                totalNodeNumber.value += 1;
+              }
+            }
+            console.log( totalNodeNumber.value );
+            console.log( totalEdgeNumber.value );
+
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
 
 
     //[1]中间画布
@@ -919,10 +983,59 @@ export default defineComponent({
       edgeEvent();        //graph边事件绑定
 
 
+
+      graph.on('cell:mouseenter', ({ cell }) => {
+        /*if (cell.isNode()) {
+          cell.addTools([
+            {
+              name: 'boundary',
+              args: {
+                attrs: {
+                  fill: '#7c68fc',
+                  stroke: '#333',
+                  'stroke-width': 1,
+                  'fill-opacity': 0.2,
+                },
+              },
+            },
+            {
+              name: 'button-remove',
+              args: {
+                x: 0,
+                y: 0,
+                offset: { x: 10, y: 10 },
+              },
+            },
+          ])
+        } else {
+          cell.addTools(['vertices', 'segments'])
+        }*/
+
+
+        if( !cell.isNode()) {
+          cell.addTools(['vertices', 'segments'])
+        }
+
+
+
+      })
+
+
+
+
+      graph.on('cell:mouseleave', ({ cell }) => {
+        cell.removeTools()
+      })
+
+
     });
 
 
     return {
+
+      saveGraphToFile,
+      openGraphFromFile,
+
       rightBarOptions,
       screenHeight,
       totalNodeNumber,
