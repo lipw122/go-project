@@ -946,6 +946,21 @@ export default defineComponent({
     //[@3].edge事件绑定
     const edgeEvent = () => {
       console.log("GoFlow-edgeEvent");
+
+
+      //[@3.6]edge:mouseenter
+      graph.on('edge:mouseenter', ({edge}) => {
+        edge.addTools(
+            {
+              name: 'button-remove',
+              args: {
+                x: 0,
+                y: 0,
+              },
+            },
+        );
+      });
+
     }
 
 
