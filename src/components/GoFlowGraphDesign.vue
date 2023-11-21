@@ -20,11 +20,7 @@
             {{totalEdgeNumber}}
 
           </div>
-
-
-
-
-
+          
         </div>
 
         <div id = "panel">
