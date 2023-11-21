@@ -17,6 +17,14 @@
             <a-button type="text" shape="circle" @click="openGraphFromFile">
               <img src="../assets/image/icon/open.svg" alt="打开go图" style="margin-bottom: 3px" />
             </a-button>
+            <a-radio-group v-model:value="graphMove" size="small" style="margin: 0 8px">
+              <a-radio-button value="jiantou" type="text" shape="circle" @click="graphToolsResponse('jiantou')">
+                <img src="../assets/image/icon/shubiao-jiantou.svg" alt="箭头" style="margin-bottom: 5px" />
+              </a-radio-button>
+              <a-radio-button value="shou" type="text" shape="circle" @click="graphToolsResponse('shou')">
+                <img src="../assets/image/icon/yidong-shou.svg" alt="移动" style="margin-bottom: 5px" />
+              </a-radio-button>
+            </a-radio-group>
 
             {{screenHeight}}
             {{totalNodeNumber}}
@@ -99,8 +107,18 @@ export default defineComponent({
     let curEdge: Edge | null;
     const store = useStore();
 
-
-
+    const graphMove = ref<string>('jiantou');
+    const graphToolsResponse = ( _mode ) => {
+      console.log( _mode );
+      switch ( _mode ) {
+        case 'jiantou':
+          graph.disablePanning();
+          break;
+        case 'shou':
+          graph.togglePanning();
+          break;
+      }
+    }
 
     const saveGraphToFile = ()=>{
 
@@ -1047,9 +1065,10 @@ export default defineComponent({
 
 
     return {
-
+      graphMove,
       saveGraphToFile,
       openGraphFromFile,
+      graphToolsResponse,
 
       rightBarOptions,
       screenHeight,
