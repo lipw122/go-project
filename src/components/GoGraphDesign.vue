@@ -233,8 +233,8 @@
                 <!--            5.信号发生器-->
                 <a-form-item label = "状态数量" v-show = "goStateBasic.goType === 5">
                   <a-select v-model:value="goState5.signalStatusNumber" placeholder="请选择信号状态数量" @change="onGoState5Change2">
-                    <a-select-option :value = 1>1个状态</a-select-option>
-                    <a-select-option :value = 2>2个状态</a-select-option>
+<!--                    <a-select-option :value = 1>1个状态</a-select-option>-->
+<!--                    <a-select-option :value = 2>2个状态</a-select-option>-->
                     <a-select-option :value = 3>3个状态</a-select-option>
                     <a-select-option :value = 4>4个状态</a-select-option>
                     <a-select-option :value = 5>5个状态</a-select-option>
