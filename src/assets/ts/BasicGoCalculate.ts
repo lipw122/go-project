@@ -66,6 +66,10 @@ export abstract class BasicGoCalculate {
         this.inValues1 = [];
         this.inValues2 = [];
     }
+    //[1.3]获取输出信号
+    getOutValues(): Array<inOutValue> {
+        return this.outValues;
+    }
 
     //[2]传递初始信号
     addInitialSignal( _initialSignal): void {

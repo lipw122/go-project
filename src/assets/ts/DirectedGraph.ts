@@ -3,70 +3,6 @@ import {generateVariableCombinations, removeDuplicatesById} from "@/assets/ts/My
 import {SignalStatusInfo} from "@/assets/ts/interface";
 import Decimal from "decimal.js"
 
-
-
-
-
-class DirectedGraph {
-
-    private nodes: { [key: string]: string[] };
-
-    constructor() {
-        this.nodes = {};
-    }
-
-    addNode(node: string): void {
-        if (!this.nodes[node]) {
-            this.nodes[node] = [];
-        }
-    }
-
-    addEdge(source: string, target: string): void {
-        if (!this.nodes[source] || !this.nodes[target]) {
-            throw new Error('Node does not exist');
-        }
-
-        this.nodes[source].push(target);
-    }
-
-    getNeighbors(node: string): string[] {
-        if (!this.nodes[node]) {
-            throw new Error('Node does not exist');
-        }
-
-        return this.nodes[node];
-    }
-
-    hasEdge(source: string, target: string): boolean {
-        if (!this.nodes[source] || !this.nodes[target]) {
-            return false;
-        }
-
-        return this.nodes[source].includes(target);
-    }
-
-    removeNode(node: string): void {
-        if (!this.nodes[node]) {
-            throw new Error('Node does not exist');
-        }
-
-        delete this.nodes[node];
-
-        for (const n in this.nodes) {
-            this.nodes[n] = this.nodes[n].filter(target => target !== node);
-        }
-    }
-
-    removeEdge(source: string, target: string): void {
-        if (!this.nodes[source] || !this.nodes[target]) {
-            throw new Error('Node does not exist');
-        }
-
-        this.nodes[source] = this.nodes[source].filter(node => node !== target);
-    }
-}
-
-
 class GoGraph {
     private nodes;
     private inputNodes = [];
@@ -154,6 +90,7 @@ class GoGraph {
                         // console.log("找到了");
                         // console.log( inputNode[i].adjacentNodes[k].port);
                         if ( inputNode[i].adjacentNodes[k].port === "in") {
+                            // console.log(inputNode[i].getOutValues());
                             operationNode[j].setInValues( inputNode[i].getOutValues() );
 
                             //传递初始信号
@@ -178,7 +115,11 @@ class GoGraph {
 
         }
 
+        let a = 0;
+
         while ( operationNode.length > 0) {
+            a++
+
             // console.log( "operationNode.length:" + operationNode.length);
             //循环所有运算节点
             for (let i = 0; i < operationNode.length; i++) {
@@ -224,113 +165,99 @@ class GoGraph {
 
             }
 
+
+            if(a > 1000){
+                break;
+            }
         }
 
     }
     //[2.2] _combinationStatusInfos运算
     calculateCombination( _combinationStatusInfos: Array<SignalStatusInfo> ): void {
-        const inputNode = [];
-        const operationNode = [];
-        this.nodes.forEach((value, key)=>{
+
+        const inputNodeMap = new Map();
+        const operationNodeMap = new Map();
+
+        this.nodes.forEach( ( value, key )=>{
             if ( value.basic.goType === 5 ) {
-                inputNode.push(value);
+                inputNodeMap.set( key, value );
             }
             else {
-                operationNode.push(value);
+                operationNodeMap.set( key, value );
             }
         });
 
-        //循环所有 信号发生器5 节点
-        for (let i = 0; i < inputNode.length; i++) {
-            //计算所有的 信号发生器5   规范 outValues
 
-            // inputNode[i].setOutValues();
-            inputNode[i].setTempOutValues( _combinationStatusInfos );
+        //【第一步】循环计算所有信号发生器
+        inputNodeMap.forEach( ( inputNodeMapValue, inputNodeMapKey )=>{
+            inputNodeMapValue.setTempOutValues( _combinationStatusInfos );
 
             //将 信号发生器5 outValues 传到 所连接的 adjacentNodes 节点中 作为  inValues
-            //循环所有 operationNode 中的所有 id
-            for (let j = 0; j < operationNode.length; j++) {
-                //循环所有 inputNode[i].adjacentNodes 中的所有id
-                for (let k = 0; k < inputNode[i].adjacentNodes.length; k++) {
-                    // 判断是否匹配到，匹配到就 赋值！！！！！！！！！！！！！！！！！！！！
-                    if ( operationNode[j].id === inputNode[i].adjacentNodes[k].id ) {
-                        // console.log("找到了");
-                        // console.log( inputNode[i].adjacentNodes[k].port);
-                        if ( inputNode[i].adjacentNodes[k].port === "in") {
 
-                            operationNode[j].setAmendCommonSignalUniversalInValues( inputNode[i].getOutValues(), _combinationStatusInfos );
+            //循环所有 inputNode[i].adjacentNodes 中的所有id
+            for (let k = 0; k < inputNodeMapValue.adjacentNodes.length; k++) {
 
-                        }
-                        else if ( inputNode[i].adjacentNodes[k].port === "in1" ) {
+                const tempOperationNode = operationNodeMap.get( inputNodeMapValue.adjacentNodes[k].id );
 
-                            operationNode[j].setAmendCommonSignalUniversalInValues1( inputNode[i].getOutValues(), _combinationStatusInfos );
-
-                        }
-                        else if ( inputNode[i].adjacentNodes[k].port === "in2" ) {
-
-                            operationNode[j].setAmendCommonSignalUniversalInValues2( inputNode[i].getOutValues(), _combinationStatusInfos );
-
-                        }
-
-                    }
+                if ( inputNodeMapValue.adjacentNodes[k].port === "in") {
+                    tempOperationNode.setAmendCommonSignalUniversalInValues( inputNodeMapValue.getOutValues(), _combinationStatusInfos );
                 }
+                else if ( inputNodeMapValue.adjacentNodes[k].port === "in1") {
+                    tempOperationNode.setAmendCommonSignalUniversalInValues1( inputNodeMapValue.getOutValues(), _combinationStatusInfos );
+                }
+                else if ( inputNodeMapValue.adjacentNodes[k].port === "in2") {
+                    tempOperationNode.setAmendCommonSignalUniversalInValues2( inputNodeMapValue.getOutValues(), _combinationStatusInfos );
+                }
+
             }
 
-        }
+        });
 
-        const startTime = Date.now();
+        let a = 0;
 
-        while ( operationNode.length > 0) {
-            console.log("while------------->");
-            const currentTime = Date.now();
-            const elapsedTime = currentTime - startTime;
-            if (elapsedTime >= 100) {
-                operationNode.splice(0, operationNode.length);
-                break;
-            }
 
-            // console.log( "operationNode.length:" + operationNode.length);
+        //【第二步】循环计算所有 非 信号发生器
+        while ( operationNodeMap.size > 0) {
+            a++;
+
             //循环所有运算节点
-            for (let i = 0; i < operationNode.length; i++) {
+            operationNodeMap.forEach( ( operationNodeMapValue, operationNodeMapKey )=>{
+
                 //如果该节点 outValues 不为空，则循环将 outValues 添加到 邻接节点的 inValues
-                if ( operationNode[i].outValues && operationNode[i].outValues.length > 0 ) {
-                    // console.log("找到了 非空out");
-                    // console.log( operationNode[i].outValues.length > 0 );
-                    // j是所有邻接节点
-                    for (let j = 0; j < operationNode[i].adjacentNodes.length; j++) {
-                        // k是所有节点
-                        for (let k = 0; k < operationNode.length; k++) {
-                            if ( operationNode[k].id ===  operationNode[i].adjacentNodes[j].id &&
-                                operationNode[i].adjacentNodes[j].port === 'in') {
+                if ( operationNodeMapValue.outValues && operationNodeMapValue.outValues.length > 0 ) {
+                    //遍历所有后续节点
+                    for (let j = 0; j < operationNodeMapValue.adjacentNodes.length; j++) {
 
-                                operationNode[k].setAmendCommonSignalUniversalInValues( operationNode[i].getOutValues(),  _combinationStatusInfos);
+                        if ( operationNodeMapValue.outValues && operationNodeMapValue.outValues.length > 0 ) {
 
+                            const tempOperationNode = operationNodeMap.get( operationNodeMapValue.adjacentNodes[j].id );
+
+                            console.log( operationNodeMapValue.getOutValues() );
+
+                            if ( operationNodeMapValue.adjacentNodes[j].port === 'in' ) {
+                                tempOperationNode.setAmendCommonSignalUniversalInValues( operationNodeMapValue.getOutValues(),  _combinationStatusInfos);
                             }
-                            else if (operationNode[k].id ===  operationNode[i].adjacentNodes[j].id &&
-                                operationNode[i].adjacentNodes[j].port === 'in1') {
-
-                                operationNode[k].setAmendCommonSignalUniversalInValues1( operationNode[i].getOutValues(), _combinationStatusInfos );
-
-
+                            else if ( operationNodeMapValue.adjacentNodes[j].port === 'in1' ) {
+                                tempOperationNode.setAmendCommonSignalUniversalInValues1( operationNodeMapValue.getOutValues(),  _combinationStatusInfos);
                             }
-                            else if (operationNode[k].id ===  operationNode[i].adjacentNodes[j].id &&
-                                operationNode[i].adjacentNodes[j].port === 'in2') {
-
-                                operationNode[k].setAmendCommonSignalUniversalInValues2( operationNode[i].getOutValues(), _combinationStatusInfos );
-
-
+                            else if ( operationNodeMapValue.adjacentNodes[j].port === 'in2' ) {
+                                tempOperationNode.setAmendCommonSignalUniversalInValues2( operationNodeMapValue.getOutValues(),  _combinationStatusInfos);
                             }
-
 
                         }
 
+                        operationNodeMap.delete( operationNodeMapKey );
+
                     }
 
-                    // operationNode.splice(i, 1);
-                    operationNode.splice(i, 1);
+
 
                 }
 
+            });
+
+            if ( a > 1000){
+                break;
             }
 
         }

@@ -87,9 +87,8 @@ export default {
     const handleEdge: Array<{"id": string, "sourceId": string, "sourcePort": string, "targetId":string, "targetPort": string}>
         = reactive([]);
 
-    // const goState5Nodes = reactive([]);
-
     const myGraph = reactive(new GoGraph());
+
     const displayValues = reactive([]);
 
     const calculateGraph = () => {
@@ -100,10 +99,11 @@ export default {
       myGraph.removeDuplicatesInitialSignals();
       const allSignalStatusInfos = myGraph.getCombinationSignals();
       console.log( allSignalStatusInfos );
-      // myGraph.amendCommonSignalUniversalCalculate();
+      myGraph.amendCommonSignalUniversalCalculate();
       //其中最后一个状态的 累计概率 一定为 1 ， 不必计算；??
       for (let i = 0; i < allSignalStatusInfos.length ; i++) {
         console.log("allSignalStatusInfos循环计算---------->");
+        console.log( allSignalStatusInfos[i] );
         myGraph.calculateCombination( allSignalStatusInfos[i] );
 
         myGraph.clearAllOutValues();
