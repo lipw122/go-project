@@ -5,8 +5,8 @@ import Decimal from "decimal.js"
 
 class GoGraph {
     private nodes;
-    private inputNodes = [];
-    private operationNodes = [];
+    // private inputNodes = [];
+    // private operationNodes = [];
     // private edges: Array<any>;
     // private adjacentNodes: Array<any>;
 
@@ -64,111 +64,90 @@ class GoGraph {
 
     //[2.1] 基础运算
     calculate():void {
-        const inputNode = [];
-        const operationNode = [];
-        this.nodes.forEach((value, key)=>{
+
+        const inputNodeMap = new Map();
+        const operationNodeMap = new Map();
+
+        this.nodes.forEach( ( value, key )=>{
             if ( value.basic.goType === 5 ) {
-                inputNode.push(value);
+                inputNodeMap.set( key, value );
             }
             else {
-                operationNode.push(value);
+                operationNodeMap.set( key, value );
             }
         });
 
-        //循环所有 信号发生器5 节点
-        for (let i = 0; i < inputNode.length; i++) {
+        //【第一步】循环计算 初始 所有信号发生器
+        inputNodeMap.forEach( ( inputNodeMapValue, inputNodeMapKey )=>{
+
             //计算所有的 信号发生器5   规范 outValues
-            inputNode[i].setOutValues();
+            inputNodeMapValue.setOutValues();
 
-            //将 信号发生器5 outValues 传到 所连接的 adjacentNodes 节点中 作为  inValues
-            //循环所有 operationNode 中的所有 id
-            for (let j = 0; j < operationNode.length; j++) {
-                //循环所有 inputNode[i].adjacentNodes 中的所有id
-                for (let k = 0; k < inputNode[i].adjacentNodes.length; k++) {
-                    // 判断是否匹配到，匹配到就 赋值！！！！！！！！！！！！！！！！！！！！
-                    if ( operationNode[j].id === inputNode[i].adjacentNodes[k].id ) {
-                        // console.log("找到了");
-                        // console.log( inputNode[i].adjacentNodes[k].port);
-                        if ( inputNode[i].adjacentNodes[k].port === "in") {
-                            // console.log(inputNode[i].getOutValues());
-                            operationNode[j].setInValues( inputNode[i].getOutValues() );
+            //循环所有 inputNode[i].adjacentNodes 中的所有id
+            for (let k = 0; k < inputNodeMapValue.adjacentNodes.length; k++) {
 
-                            //传递初始信号
-                            operationNode[j].addInitialSignal( inputNode[i].initialSignal );
-                        }
-                        else if ( inputNode[i].adjacentNodes[k].port === "in1" ) {
-                            operationNode[j].setInValues1( inputNode[i].getOutValues() );
+                const tempOperationNode = operationNodeMap.get( inputNodeMapValue.adjacentNodes[k].id );
 
-                            //传递初始信号
-                            operationNode[j].addInitialSignal( inputNode[i].initialSignal );
-                        }
-                        else if ( inputNode[i].adjacentNodes[k].port === "in2" ) {
-                            operationNode[j].setInValues2( inputNode[i].getOutValues() );
-
-                            //传递初始信号
-                            operationNode[j].addInitialSignal( inputNode[i].initialSignal );
-                        }
-
-                    }
+                if ( inputNodeMapValue.adjacentNodes[k].port === "in") {
+                    tempOperationNode.setInValues( inputNodeMapValue.getOutValues() );
+                    //传递初始信号
+                    tempOperationNode.addInitialSignal( inputNodeMapValue.initialSignal );
                 }
+                else if ( inputNodeMapValue.adjacentNodes[k].port === "in1") {
+                    tempOperationNode.setInValues1( inputNodeMapValue.getOutValues() );
+                    //传递初始信号
+                    tempOperationNode.addInitialSignal( inputNodeMapValue.initialSignal );
+                }
+                else if ( inputNodeMapValue.adjacentNodes[k].port === "in2") {
+                    tempOperationNode.setInValues2( inputNodeMapValue.getOutValues() );
+                    //传递初始信号
+                    tempOperationNode.addInitialSignal( inputNodeMapValue.initialSignal );
+                }
+
             }
 
-        }
 
-        let a = 0;
+        });
 
-        while ( operationNode.length > 0) {
-            a++
+        //【第二步】循环计算 初始 所有 非 信号发生器
+        let calculateWhile = 0;
+        while ( operationNodeMap.size > 0) {
+            calculateWhile++;
 
-            // console.log( "operationNode.length:" + operationNode.length);
             //循环所有运算节点
-            for (let i = 0; i < operationNode.length; i++) {
+            operationNodeMap.forEach( ( operationNodeMapValue, operationNodeMapKey )=>{
+
                 //如果该节点 outValues 不为空，则循环将 outValues 添加到 邻接节点的 inValues
-                if ( operationNode[i].outValues ) {
-                    // console.log("找到了 非空out");
-                    // console.log(operationNode[i].outValues);
-                    // j是所有邻接节点
-                    for (let j = 0; j < operationNode[i].adjacentNodes.length; j++) {
-                        // k是所有节点
-                        for (let k = 0; k < operationNode.length; k++) {
-                            if ( operationNode[k].id ===  operationNode[i].adjacentNodes[j].id &&
-                                operationNode[i].adjacentNodes[j].port === 'in') {
+                if ( operationNodeMapValue.outValues && operationNodeMapValue.outValues.length > 0 ) {
+                    //遍历所有后续节点
+                    for (let j = 0; j < operationNodeMapValue.adjacentNodes.length; j++) {
 
-                                operationNode[k].setInValues(operationNode[i].outValues);
-                                operationNode[k].addInitialSignals( operationNode[i].initialSignals );
+                        const tempOperationNode = operationNodeMap.get( operationNodeMapValue.adjacentNodes[j].id );
 
-                            }
-                            else if (operationNode[k].id ===  operationNode[i].adjacentNodes[j].id &&
-                                operationNode[i].adjacentNodes[j].port === 'in1') {
-
-                                operationNode[k].setInValues1(operationNode[i].outValues);
-                                operationNode[k].addInitialSignals( operationNode[i].initialSignals );
-
-                            }
-                            else if (operationNode[k].id ===  operationNode[i].adjacentNodes[j].id &&
-                                operationNode[i].adjacentNodes[j].port === 'in2') {
-
-                                operationNode[k].setInValues2(operationNode[i].outValues);
-                                operationNode[k].addInitialSignals( operationNode[i].initialSignals );
-
-                            }
-
-
+                        if ( operationNodeMapValue.adjacentNodes[j].port === 'in' ) {
+                            tempOperationNode.setInValues(operationNodeMapValue.getOutValues());
+                            tempOperationNode.addInitialSignals( operationNodeMapValue.initialSignals );
+                        }
+                        else if ( operationNodeMapValue.adjacentNodes[j].port === 'in1' ) {
+                            tempOperationNode.setInValues1(operationNodeMapValue.getOutValues());
+                            tempOperationNode.addInitialSignals( operationNodeMapValue.initialSignals );
+                        }
+                        else if ( operationNodeMapValue.adjacentNodes[j].port === 'in2' ) {
+                            tempOperationNode.setInValues2(operationNodeMapValue.getOutValues());
+                            tempOperationNode.addInitialSignals( operationNodeMapValue.initialSignals );
                         }
 
+                        operationNodeMap.delete( operationNodeMapKey );
+
                     }
-
-                    // console.log(operationNode[i]);
-                    operationNode.splice(i, 1);
-
                 }
 
-            }
+            });
 
-
-            if(a > 1000){
+            if ( calculateWhile > 1000){
                 break;
             }
+
         }
 
     }
@@ -188,11 +167,10 @@ class GoGraph {
         });
 
 
-        //【第一步】循环计算所有信号发生器
+        //【第一步】循环计算 （组合） 所有信号发生器
         inputNodeMap.forEach( ( inputNodeMapValue, inputNodeMapKey )=>{
-            inputNodeMapValue.setTempOutValues( _combinationStatusInfos );
 
-            //将 信号发生器5 outValues 传到 所连接的 adjacentNodes 节点中 作为  inValues
+            inputNodeMapValue.setTempOutValues( _combinationStatusInfos );
 
             //循环所有 inputNode[i].adjacentNodes 中的所有id
             for (let k = 0; k < inputNodeMapValue.adjacentNodes.length; k++) {
@@ -213,12 +191,11 @@ class GoGraph {
 
         });
 
-        let a = 0;
 
-
-        //【第二步】循环计算所有 非 信号发生器
+        //【第二步】循环计算 （组合） 所有 非 信号发生器
+        let calculateCombinationWhile = 0;
         while ( operationNodeMap.size > 0) {
-            a++;
+            calculateCombinationWhile++;
 
             //循环所有运算节点
             operationNodeMap.forEach( ( operationNodeMapValue, operationNodeMapKey )=>{
@@ -231,8 +208,6 @@ class GoGraph {
                         if ( operationNodeMapValue.outValues && operationNodeMapValue.outValues.length > 0 ) {
 
                             const tempOperationNode = operationNodeMap.get( operationNodeMapValue.adjacentNodes[j].id );
-
-                            console.log( operationNodeMapValue.getOutValues() );
 
                             if ( operationNodeMapValue.adjacentNodes[j].port === 'in' ) {
                                 tempOperationNode.setAmendCommonSignalUniversalInValues( operationNodeMapValue.getOutValues(),  _combinationStatusInfos);
@@ -249,21 +224,18 @@ class GoGraph {
                         operationNodeMap.delete( operationNodeMapKey );
 
                     }
-
-
-
                 }
 
             });
 
-            if ( a > 1000){
+            if ( calculateCombinationWhile > 1000){
                 break;
             }
 
         }
 
     }
-    //[2.3]循环运算所有结果
+    //[2.3]循环运算所有 (组合运算后) 结果
     calculateAllCombinationOutValuesResult(): void {
         const inputNode = [];
         const operationNode = [];
@@ -281,7 +253,7 @@ class GoGraph {
             operationNode[i].calculateCombinationOutValuesResult();
         }
         for (let i = 0; i < inputNode.length; i++) {
-            console.log("循环运算所有operationNode结果");
+            console.log("循环运算所有inputNode结果");
             inputNode[i].calculateCombinationOutValuesResult();
         }
 
@@ -462,14 +434,8 @@ class GoGraph {
             }
         }
 
-        console.log(_allSignalStatusInfos);
-
-        //其中最后一个状态的 累计概率 一定为 1 ， 不必计算；
-        for (let i = 0; i < _allSignalStatusInfos.length - 1 ; i++) {
-            console.log("循环计算---------->");
-
-
-        }
+        //所有的 （组合）
+        // console.log(_allSignalStatusInfos);
 
     }
 

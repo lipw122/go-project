@@ -97,8 +97,9 @@ export default {
       myGraph.clearAllInValues();
       //去重
       myGraph.removeDuplicatesInitialSignals();
+
       const allSignalStatusInfos = myGraph.getCombinationSignals();
-      console.log( allSignalStatusInfos );
+
       myGraph.amendCommonSignalUniversalCalculate();
       //其中最后一个状态的 累计概率 一定为 1 ， 不必计算；??
       for (let i = 0; i < allSignalStatusInfos.length ; i++) {
@@ -111,7 +112,6 @@ export default {
       }
       myGraph.calculateAllCombinationOutValuesResult();
 
-
       displayValues.splice(0, displayValues.length)
       myGraph.getNodes().forEach( (value, key)=>{
         displayValues.push({
@@ -121,8 +121,9 @@ export default {
         });
       })
 
-
-      console.log(myGraph);
+      //运算的最终结果Map
+      console.log( myGraph.getNodes() );
+      
     }
 
 

@@ -169,19 +169,19 @@ class GoCalculate2 extends BasicGoCalculate{
 
 
     //通过 initialSignals 计算 commonSignal
-    findCommonSignal ( arr: string[] ): string[]  {
-        const duplicates: string[] = [];
-        const countMap: { [key: string]: number } = {};
-
-        for (const str of arr) {
-            countMap[str] = countMap[str] ? countMap[str] + 1 : 1;
-            if (countMap[str] === 2) {
-                duplicates.push(str);
-            }
-        }
-
-        return duplicates;
-    }
+    // findCommonSignal ( arr: string[] ): string[]  {
+    //     const duplicates: string[] = [];
+    //     const countMap: { [key: string]: number } = {};
+    //
+    //     for (const str of arr) {
+    //         countMap[str] = countMap[str] ? countMap[str] + 1 : 1;
+    //         if (countMap[str] === 2) {
+    //             duplicates.push(str);
+    //         }
+    //     }
+    //
+    //     return duplicates;
+    // }
 
 }
 
@@ -262,7 +262,8 @@ class GoCalculate5 {
 
     tempGoState: GoState5;
 
-    private outValues: Array<inOutValue>;
+    outValues: Array<inOutValue>;
+
     calculateOutValues(): Array<inOutValue> {
         const out = [];
 
