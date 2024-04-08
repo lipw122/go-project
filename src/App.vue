@@ -25,6 +25,9 @@
         <a-menu-item key="4">
           <router-link to="/calculate">计算</router-link>
         </a-menu-item>
+        <a-menu-item key="5">
+          <router-link to="/dynamic">动态计算</router-link>
+        </a-menu-item>
 <!--        <a-menu-item key="3">
           <router-link to="/home">nav 3</router-link>
         </a-menu-item>-->

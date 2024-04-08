@@ -77,6 +77,7 @@ const goCell1 = new Shape.Circle({
         goNumber: null,
         Pc_1: null,
         Pc_2: null,
+        lambda: null,
     },
     attrs: {
         label: {
@@ -167,6 +168,7 @@ const goCell3 = new Shape.Circle({
         Pc_0: null,
         Pc_1: null,
         Pc_2: null,
+        lambda: null,
     },
     attrs: {
         label: {
@@ -264,8 +266,9 @@ const goCell5 = new Shape.Polygon({
         deviceName: null,
         goType: 5,
         goNumber: null,
-        signalStatusNumber: null,
-        signalStatusValues: null,
+        signalStatusNumber: 3,
+        signalStatusValues: [{statusValue:0,  value: 0},{statusValue:1,  value: null},{statusValue:2,  value: null}],
+        lambda: null,
     },
     attrs: {
         label: {
@@ -304,6 +307,7 @@ const goCell6 = new Shape.Circle({
         Pc_0: null,
         Pc_1: null,
         Pc_2: null,
+        lambda: null,
     },
     attrs: {
         label: {
@@ -350,6 +354,7 @@ const goCell7 = new Shape.Circle({
         Pc_0: null,
         Pc_1: null,
         Pc_2: null,
+        lambda: null,
     },
     attrs: {
         label: {
@@ -408,40 +413,17 @@ const goCell8 = new Shape.Circle({
         }
     },
     ports: {
-        groups: {
-            group1: {
-                position: 'left',
-                attrs: {
-                    circle: {
-                        r: 4,
-                        magnet: true,
-                        stroke: '#31d0c6',
-                        fill: '#fff',
-                    }
-                }
-            },
-            group2: {
-                position: 'right',
-                attrs: {
-                    circle: {
-                        r: 4,
-                        magnet: true,
-                        stroke: '#31d0c6',
-                        fill: '#fff',
-                    }
-                }
-            },
-        },
-        items: [
-            {
-                id: 'port1',
-                group: 'group1',
-            },
-            {
-                id: 'port2',
-                group: 'group2'
-            },
-        ]
+        groups: { ...groups },
+        // items: [
+        //     {
+        //         id: 'port1',
+        //         group: 'group1',
+        //     },
+        //     {
+        //         id: 'port2',
+        //         group: 'group2'
+        //     },
+        // ]
 
     }
 
@@ -471,114 +453,7 @@ const goCell9 = new Shape.Circle({
         }
     },
     ports: {
-        groups: {
-            in1: {
-                position: 'left',
-                label: {
-                    position: {
-                        name : 'left',
-                        args: {
-                            x: 0,
-                            y: 10, // 强制指定 y 坐标为 10，替换计算结果中的 y 坐标
-                            attrs: {
-                                text: {
-                                    // fill: 'red', // 设置标签颜色为红色
-                                },
-                            },
-                        },
-                    },
-                },
-                attrs: {
-                    circle: {
-                        r: 4,
-                        magnet: true,
-                        stroke: '#31d0c6',
-                        fill: '#fff',
-                    },
-                }
-            },
-            in2: {
-                position: 'top',
-                label: {
-                    position: {
-                        name : 'right',
-                        args: {
-                            x: 6,
-                            y: 0, // 强制指定 y 坐标为 10，替换计算结果中的 y 坐标
-                            attrs: {
-                                text: {
-                                    // fill: 'red', // 设置标签颜色为红色
-                                },
-                            },
-                        },
-                    },
-                },
-                attrs: {
-                    circle: {
-                        r: 4,
-                        magnet: true,
-                        stroke: '#31d0c6',
-                        fill: '#fff',
-                    }
-                }
-            },
-            out: {
-                position: 'right',
-                label: {
-                    position: {
-                        name : 'right',
-                        args: {
-                            x: 0,
-                            y: 10, // 强制指定 y 坐标为 10，替换计算结果中的 y 坐标
-                            attrs: {
-                                text: {
-                                    // fill: 'red', // 设置标签颜色为红色
-                                },
-                            },
-                        },
-                    },
-                },
-                attrs: {
-                    circle: {
-                        r: 4,
-                        magnet: true,
-                        stroke: '#31d0c6',
-                        fill: '#fff',
-                    }
-                }
-            },
-
-        },
-        items: [
-            {
-                id: 'in1',
-                group: 'in1',
-                attrs: {
-                    text: {
-                        text: 'in-1',
-                    },
-                },
-            },
-            {
-                id: 'in2',
-                group: 'in2',
-                attrs: {
-                    text: {
-                        text: 'in-2',
-                    },
-                },
-            },
-            {
-                id: 'out',
-                group: 'out',
-                attrs: {
-                    text: {
-                        text: 'out',
-                    },
-                },
-            },
-        ]
-
+        groups: { ...groups },
     }
 
 });
@@ -607,26 +482,6 @@ const goCell10 = new Shape.Circle({
     },
     ports: {
         groups: { ...groups },
-        /*items: [
-            {
-                id: 'in',
-                group: 'in',
-                attrs: {
-                    text: {
-                        text: '',
-                    },
-                },
-            },
-            {
-                id: 'out',
-                group: 'out',
-                attrs: {
-                    text: {
-                        text: 'out',
-                    },
-                },
-            },
-        ]*/
 
     }
 

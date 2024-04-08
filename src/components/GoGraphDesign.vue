@@ -2,22 +2,17 @@
   <div id="demo1">
 <!--    <GoFlowCell21></GoFlowCell21>-->
 
+    <a-row :gutter="[3,3]">
 
-    <a-row :gutter="[8,8]">
-
-      <a-col :span="5">
+      <a-col :span="4">
         <div id = "stencil"></div>
       </a-col>
 
-      <a-col :span="14">
-        <div id="panelTool" style="display: flex">
+      <a-col :span="12">
+        <div id="panelTool" style="display: flex; background-color: #F2F7FA; ">
           <div>
-<!--            <a-checkbox
-                v-model:checked="graphStatePanning"
-                @click="graphToolsResponse"
-            >
-              移动画布
-            </a-checkbox>-->
+
+            <a-button type="dashed" size="small" @click="openFilePicker" style="margin: 0 5px">插入原理图</a-button>
 
             <a-button type="text" shape="circle" @click="saveGraphToFile">
               <img src="../assets/image/icon/saveGraph.svg" alt="保存go图" style="margin-bottom: 3px" />
@@ -25,9 +20,9 @@
             <a-button type="text" shape="circle" @click="openGraphFromFile">
               <img src="../assets/image/icon/openGraph.svg" alt="打开go图" style="margin-bottom: 5px" />
             </a-button>
-            {{screenHeight}}
-            {{totalNodeNumber}}
-            {{totalEdgeNumber}}
+<!--            {{screenHeight}}-->
+            节点 {{totalNodeNumber}}、
+            信号流 {{totalEdgeNumber}}
             <a-radio-group v-model:value="graphMove" size="small" style="margin: 0 8px">
               <a-radio-button value="jiantou" type="text" shape="circle" @click="graphToolsResponse('jiantou')">
                 <img src="../assets/image/icon/shubiao-jiantou.svg" alt="箭头" style="margin-bottom: 5px" />
@@ -63,396 +58,380 @@
         </div>
       </a-col>
 
-      <a-col :span="5">
-        <div class="config" >
-          <div style="float: left">
-            <a-radio-group v-model:value="rightBarOptions" size="small">
-              <a-radio-button value="property">属性</a-radio-button>
-              <a-radio-button value="structure">结构</a-radio-button>
-            </a-radio-group>
+      <a-col :span="8" >
+
+        <div id="rightVision" class="config" style="overflow: auto">
+
+          <button @click="zoomIn">放大</button>
+          <button @click="zoomOut">缩小</button>
+          缩放比：{{imagePercent}}%
+          <div id = "imageVisionBox" style="overflow: auto">
+            <img id="imageVision" :src="selectedImageSrc" :alt="selectedImage.alt" style=" "/>
           </div>
 
-          <hr style="margin-top: 30px; color: #AFAFAF; "/>
+          <div   id="property" style="float: left; overflow: auto; width: 250px;">
 
-          <div style="float: left">
-            <div  id="property" v-show='rightBarOptions === "property"' style="float: left; overflow: auto; width: 250px;">
+            <a-form>
 
-              <a-form>
-
-                <a-form-item label="信号流编号" v-show="isShowEdgeNumberInput">
-                  <a-input id="edgeNumberInput" v-model:value="edgeNumber" @change="onEdgeNumberChange"/>
-                </a-form-item>
+              <a-form-item label="信号流编号" v-show="isShowEdgeNumberInput">
+                <a-input id="edgeNumberInput" v-model:value="edgeNumber" @change="onEdgeNumberChange"/>
+              </a-form-item>
 
 
-                <!--              基本信息-->
-                <table v-show = "goStateBasic.goType !== null" class="goStateTable">
-                  <tr>
-                    <th>参数名</th>
-                    <th>值</th>
-                  </tr>
-                  <tr>
-                    <td>
-                      设备名:
-                    </td>
-                    <td>
-                      <a-input v-model:value = "goStateBasic.deviceName" placeholder="请输入设备名称" @change="onGoStateBasicChange"/>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      类型:
-                    </td>
-                    <td>
-                      <a-input v-model:value = "goStateBasic.goType" readonly="readonly" placeholder="运算符类型"/>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      编号:
-                    </td>
-                    <td>
-                      <a-input id="goNumberInput" v-model:value = "goStateBasic.goNumber"  placeholder="请输入Go操作符编号"
-                               @change="onGoNumberChange"/>
-                    </td>
-                  </tr>
-                </table>
+              <!--              基本信息-->
+              <table v-show = "goStateBasic.goType !== null" class="goStateTable">
+                <tr>
+                  <th>参数名</th>
+                  <th>值</th>
+                </tr>
+                <tr>
+                  <td>
+                    设备名:
+                  </td>
+                  <td>
+                    <a-input v-model:value = "goStateBasic.deviceName" placeholder="请输入设备名称" @change="onGoStateBasicChange"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    类型:
+                  </td>
+                  <td>
+                    <a-input v-model:value = "goStateBasic.goType" readonly="readonly" placeholder="运算符类型"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    编号:
+                  </td>
+                  <td>
+                    <a-input id="goNumberInput" v-model:value = "goStateBasic.goNumber"  placeholder="请输入Go操作符编号"
+                             @change="onGoNumberChange"/>
+                  </td>
+                </tr>
+              </table>
 
 
+              <a-form-item label="故障率λ(可选)：" v-show = "goStateBasic.goType === 1 ||
+                           goStateBasic.goType === 3 ||
+                           goStateBasic.goType === 5 ||
+                           goStateBasic.goType === 6 ||
+                           goStateBasic.goType === 7 ||
+                           goStateBasic.goType === 16 ||
+                           goStateBasic.goType === 17" >
+                <a-input v-model:value="lambda" @change="onLambdaChange"/>
+              </a-form-item>
 
 
-
-                <!--              3,6,7,16,17单元-->
-                <table v-show = "goStateBasic.goType === 3 ||
+              <!--              3,6,7,16,17单元-->
+              <table v-show = "goStateBasic.goType === 3 ||
                                 goStateBasic.goType === 6 ||
                                 goStateBasic.goType === 7 ||
                                 goStateBasic.goType === 16 ||
                                 goStateBasic.goType === 17" class="goStateTable">
-                  <tr>
-                    <th>运算符状态</th>
-                    <th>参数</th>
-                    <th>值</th>
-                  </tr>
-                  <tr>
-                    <td>0(提前)</td>
-                    <td>Pc_0</td>
-                    <td><a-input v-model:value="goState3_6_7_16_17.Pc_0" @change="onGoState3_6_7_16_17Change"></a-input></td>
-                  </tr>
-                  <tr>
-                    <td>1(成功)</td>
-                    <td>Pc_1</td>
-                    <td><a-input v-model:value="goState3_6_7_16_17.Pc_1" @change="onGoState3_6_7_16_17Change"></a-input></td>
-                  </tr>
-                  <tr>
-                    <td>2(故障)</td>
-                    <td>Pc_2</td>
-                    <td><a-input v-model:value="goState3_6_7_16_17.Pc_2" @change="onGoState3_6_7_16_17Change"></a-input></td>
-                  </tr>
-                </table>
-
-
-                <!--            1.两状态单元-->
-                <table class="goStateTable" v-show = "goStateBasic.goType === 1">
-                  <tr>
-                    <th>运算符状态</th>
-                    <th>参数</th>
-                    <th>值</th>
-                  </tr>
-                  <tr>
-                    <td>1(正常)</td>
-                    <td>Pc_1</td>
-                    <td><a-input v-model:value = "goState1.Pc_1" placeholder="设备正常概率值" @change="onGoState1Change"/></td>
-                  </tr>
-                  <tr>
-                    <td>2(故障)</td>
-                    <td>Pc_2</td>
-                    <td><a-input v-model:value = "goState1.Pc_2" placeholder="设备故障概率值" @change="onGoState1Change"/></td>
-                  </tr>
-                </table>
-
-                <!--            2.或门-->
-<!--                <table class="goStateTable" v-show = "goStateBasic.goType === 2">
-                  <tr>
-                    <td>输入信号数量</td>
-                    <td>
-                      <a-select v-model:value="goState2.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState2Change2">
-                        <a-select-option :value = 1>输入1个信号</a-select-option>
-                        <a-select-option :value = 2>输入2个信号</a-select-option>
-                        <a-select-option :value = 3>输入3个信号</a-select-option>
-                        <a-select-option :value = 4>输入4个信号</a-select-option>
-                      </a-select>
-                    </td>
-                  </tr>
-                </table>-->
-
-
-                <!--            4.多信号发生器-->
-                <a-form-item label = "信号数量" v-show = "goStateBasic.goType === 4">
-                  <a-select v-model:value="goState4.signalNumber" placeholder="请选择输出信号数量" @change="onGoState4Change2">
-                    <a-select-option :value = 1>输出1个信号</a-select-option>
-                    <a-select-option :value = 2>输出2个信号</a-select-option>
-                    <a-select-option :value = 3>输出3个信号</a-select-option>
-                    <a-select-option :value = 4>输出4个信号</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <a-form-item v-for="item in goState4.signalStatusValues" :key="item" :label="item.signal"  v-show = "goStateBasic.goType == 4">
-                  <!--          <a-input v-model:value="item.statusNumber" @change="onGoState4Change"></a-input>-->
-                  <a-select v-model:value="item.statusNumber" placeholder="请选择信号状态数量" @change="onGoState4Change3()">
-                    <a-select-option :value = 1>1个状态</a-select-option>
-                    <a-select-option :value = 2>2个状态</a-select-option>
-                    <a-select-option :value = 3>3个状态</a-select-option>
-                    <a-select-option :value = 4>4个状态</a-select-option>
-                  </a-select>
-                  <div>
-                    <table>
-                      <tr   v-for="item2 in item.statusValues" :key="item2">
-                        <td style="width: 60px; font-size: 6px">
-                          {{item2.status}}概率:
-                        </td>
-                        <td>
-                          <a-input v-model:value="item2.value" size="small" @change="onGoState4Change"></a-input>
-                        </td>
-                      </tr>
-                    </table>
-                  </div>
-                </a-form-item>
-                <table v-show="goState4.signalCombinationValues" class="goStateTable">
-                  <tr>
-                    <th v-for="(item) in goState4.signalNumber" :key="item" style="width: 40px">信号{{item}}状态</th>
-                    <th>概率值</th>
-                  </tr>
-                  <tr v-for="item in goState4.signalCombinationValues" :key="item">
-                    <td v-for="item2 in item.comNum" :key="item2">{{item2}}</td>
-                    <td>
-                      <a-input v-model:value="item.value" @change="onGoState4Change"></a-input>
-                    </td>
-                  </tr>
-                </table>
-
-
-
-                <!--            5.信号发生器-->
-                <a-form-item label = "状态数量" v-show = "goStateBasic.goType === 5">
-                  <a-select v-model:value="goState5.signalStatusNumber" placeholder="请选择信号状态数量" @change="onGoState5Change2">
-                    <a-select-option :value = 3>3个状态</a-select-option>
-                    <a-select-option :value = 4>4个状态</a-select-option>
-                    <a-select-option :value = 5>5个状态</a-select-option>
-                    <a-select-option :value = 6>6个状态</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <table class="goStateTable" v-show = "goState5.signalStatusValues !== null">
-                  <tr>
-                    <th>状态值</th>
-                    <th>概率值</th>
-                  </tr>
-                  <tr v-for="item in goState5.signalStatusValues" :key="item">
-                    <td>
-                      {{item.statusValue}}
-                    </td>
-                    <td>
-                      <a-input v-model:value="item.value" @change="onGoState5Change"></a-input>
-                    </td>
-                  </tr>
-                </table>
-
-
-
-                <!--              8.延迟发生器-->
-                <a-form-item label = "状态数量" v-show = "goStateBasic.goType === 8">
-                  <a-select v-model:value="goState8.statusNumber" placeholder="请选择信号状态数量" @change="onGoState8Change2">
-<!--                    <a-select-option :value = 1>1个状态</a-select-option>-->
-<!--                    <a-select-option :value = 2>2个状态</a-select-option>-->
-                    <a-select-option :value = 3>3个状态</a-select-option>
-                    <a-select-option :value = 4>4个状态</a-select-option>
-                    <a-select-option :value = 5>5个状态</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <table v-show = "goState8.statusValues !== null" class="goStateTable">
-                  <tr>
-                    <th>状态值增量</th>
-                    <th>值</th>
-                    <th>对应概率</th>
-                    <th>值</th>
-                  </tr>
-                  <tr v-for="(item, index) in goState8.statusValues" :key="item">
-                    <td> D{{index+1}} </td>
-                    <td><a-input v-model:value="item.D" @change="onGoState8Change"></a-input></td>
-                    <td>P{{index+1}}</td>
-                    <td><a-input v-model:value="item.P" @change="onGoState8Change"></a-input></td>
-                  </tr>
-                </table>
-
-
-                <!--              9.功能操作符-->
-                <a-form-item label = "状态数量" v-show = "goStateBasic.goType === 9">
-                  <a-select v-model:value="goState9.differenceNumber" placeholder="请选择信号状态数量" @change="onGoState9Change2">
-                    <a-select-option :value = 1>1</a-select-option>
-                    <a-select-option :value = 2>2</a-select-option>
-                    <a-select-option :value = 3>3</a-select-option>
-                    <a-select-option :value = 4>4</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <table v-show = "goState9.differenceValues !== null" class="goStateTable">
-                  <tr>
-                    <th>输入信号状态值之差</th>
-                    <th>值</th>
-                    <th>输出信号状态值增量</th>
-                    <th>值</th>
-                  </tr>
-                  <tr v-for="(item, index) in goState9.differenceValues" :key="item">
-                    <td> D{{index+1}} </td>
-                    <td><a-input v-model:value="item.X" @change="onGoState9Change"></a-input></td>
-                    <td>P{{index+1}}</td>
-                    <td><a-input v-model:value="item.Y" @change="onGoState9Change"></a-input></td>
-                  </tr>
-                </table>
-
-                <!--              10.与门-->
-                <a-form-item label = "信号数量" v-show = "goStateBasic.goType === 10">
-                  <a-select v-model:value="goState10.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState10Change2">
-                    <a-select-option :value = 1>输入1个信号</a-select-option>
-                    <a-select-option :value = 2>输入2个信号</a-select-option>
-                    <a-select-option :value = 3>输入3个信号</a-select-option>
-                    <a-select-option :value = 4>输入4个信号</a-select-option>
-                  </a-select>
-                </a-form-item>
-
-                <!--              11.M取K门-->
-                <a-form-item label = "M: " v-show = "goStateBasic.goType === 11">
-                  <a-select v-model:value="goState11.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState11Change2">
-                    <a-select-option :value = 1>输入1个信号</a-select-option>
-                    <a-select-option :value = 2>输入2个信号</a-select-option>
-                    <a-select-option :value = 3>输入3个信号</a-select-option>
-                    <a-select-option :value = 4>输入4个信号</a-select-option>
-                    <a-select-option :value = 5>输入5个信号</a-select-option>
-                    <a-select-option :value = 6>输入6个信号</a-select-option>
-                    <a-select-option :value = 7>输入7个信号</a-select-option>
-                    <a-select-option :value = 8>输入8个信号</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <a-form-item label = "K: " v-show = "goStateBasic.goType === 11">
-                  <a-select v-model:value="goState11.succeedNumber" placeholder="请选择取K" @change="onGoState11Change">
-                    <a-select-option :value = 1>取1</a-select-option>
-                    <a-select-option :value = 2>取2</a-select-option>
-                    <a-select-option :value = 3>取3</a-select-option>
-                    <a-select-option :value = 4>取4</a-select-option>
-                    <a-select-option :value = 5>取5</a-select-option>
-                    <a-select-option :value = 6>取6</a-select-option>
-                    <a-select-option :value = 7>取7</a-select-option>
-                    <a-select-option :value = 8>取8</a-select-option>
-                  </a-select>
-                </a-form-item>
-
-                <!--              12.路径分离器-->
-                <a-form-item label = "分离路径个数 " v-show = "goStateBasic.goType === 12">
-                  <a-select v-model:value="goState12.outSignalsNumber" placeholder="请选择分离数量" @change="onGoState12Change2">
-                    <a-select-option :value = 1>分离1个信号</a-select-option>
-                    <a-select-option :value = 2>分离2个信号</a-select-option>
-                    <a-select-option :value = 3>分离3个信号</a-select-option>
-                    <a-select-option :value = 4>分离4个信号</a-select-option>
-                    <a-select-option :value = 5>分离5个信号</a-select-option>
-                    <a-select-option :value = 6>分离6个信号</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <table v-show = "goState12.outStatusValues !== null" class="goStateTable">
-                  <tr>
-                    <th>参数</th>
-                    <th>值</th>
-                  </tr>
-                  <tr v-for="item in goState12.outStatusValues" :key="item">
-                    <td>{{item.p}}</td>
-                    <td><a-input v-model:value="item.value" @change="onGoState12Change"></a-input></td>
-                  </tr>
-                </table>
-
-                <!--              14.线性组合发生器-->
-                <a-form-item label = "组合信号数量" v-show = "goStateBasic.goType === 14">
-                  <a-select v-model:value="goState14.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState14Change2">
-                    <!--                  <a-select-option :value = 1>输入1个信号</a-select-option>-->
-                    <a-select-option :value = 2>输入2个信号</a-select-option>
-                    <a-select-option :value = 3>输入3个信号</a-select-option>
-                    <a-select-option :value = 4>输入4个信号</a-select-option>
-                    <a-select-option :value = 5>输入5个信号</a-select-option>
-                    <a-select-option :value = 6>输入6个信号</a-select-option>
-                  </a-select>
-                </a-form-item>
-                <table v-show = "goState14.linearCoefficients !== null" class="goStateTable">
-                  <tr>
-                    <th>系数</th>
-                    <th>值</th>
-                  </tr>
-                  <tr v-for="item in goState14.linearCoefficients" :key="item">
-                    <td>{{item.a}}</td>
-                    <td><a-input v-model:value="item.value" @change="onGoState14Change"></a-input></td>
-                  </tr>
-                </table>
-
-
-                <!--              15.限值概率门-->
-                <table v-show = "goStateBasic.goType === 15" class="goStateTable">
-                  <tr>
-                    <th></th>
-                    <th>参数</th>
-                    <th>值</th>
-                  </tr>
-                  <tr>
-                    <td  rowspan="2">输出信号状态值控制（V1~V2）</td>
-                    <td>V1</td>
-                    <td><a-input v-model:value="goState15.V1" @change="onGoState15Change"></a-input></td>
-                  </tr>
-                  <tr>
-                    <td>V2</td>
-                    <td><a-input v-model:value="goState15.V2" @change="onGoState15Change"></a-input></td>
-                  </tr>
-                  <tr>
-                    <td rowspan="2">输入信号状态值域值（V3~V4）</td>
-                    <td>V3</td>
-                    <td><a-input v-model:value="goState15.V3" @change="onGoState15Change"></a-input></td>
-                  </tr>
-                  <tr>
-                    <td>V4</td>
-                    <td><a-input v-model:value="goState15.V4" @change="onGoState15Change"></a-input></td>
-                  </tr>
-                  <tr>
-                    <td  rowspan="2">输入信号概率值域值（P1~P2）</td>
-                    <td>P1</td>
-                    <td><a-input v-model:value="goState15.P1" @change="onGoState15Change"></a-input></td>
-                  </tr>
-                  <tr>
-                    <td>P2</td>
-                    <td><a-input v-model:value="goState15.P2" @change="onGoState15Change"></a-input></td>
-                  </tr>
-                </table>
-
-              </a-form>
-            </div>
-
-            <div v-show='rightBarOptions === "structure"'>
-              表格
-              <table border="1">
-                <thead>
                 <tr>
-                  <th>列标题1</th>
-                  <th>列标题2</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                  <td>行1，列1</td>
-                  <td>行1，列2</td>
+                  <th>运算符状态</th>
+                  <th>参数</th>
+                  <th>值</th>
                 </tr>
                 <tr>
-                  <td>行2，列1</td>
-                  <td>行2，列2</td>
+                  <td>0(提前)</td>
+                  <td>Pc_0</td>
+                  <td><a-input v-model:value="goState3_6_7_16_17.Pc_0" @change="onGoState3_6_7_16_17Change"></a-input></td>
                 </tr>
                 <tr>
-                  <td>行3，列1</td>
-                  <td>行3，列2</td>
+                  <td>1(成功)</td>
+                  <td>Pc_1</td>
+                  <td><a-input v-model:value="goState3_6_7_16_17.Pc_1" @change="onGoState3_6_7_16_17Change"></a-input></td>
                 </tr>
-                </tbody>
+                <tr>
+                  <td>2(故障)</td>
+                  <td>Pc_2</td>
+                  <td><a-input v-model:value="goState3_6_7_16_17.Pc_2" @change="onGoState3_6_7_16_17Change"></a-input></td>
+                </tr>
               </table>
-            </div>
+
+
+              <!--            1.两状态单元-->
+              <table class="goStateTable" v-show = "goStateBasic.goType === 1">
+                <tr>
+                  <th>运算符状态</th>
+                  <th>参数</th>
+                  <th>值</th>
+                </tr>
+                <tr>
+                  <td>1(正常)</td>
+                  <td>Pc_1</td>
+                  <td><a-input v-model:value = "goState1.Pc_1" placeholder="设备正常概率值" @change="onGoState1Change"/></td>
+                </tr>
+                <tr>
+                  <td>2(故障)</td>
+                  <td>Pc_2</td>
+                  <td><a-input v-model:value = "goState1.Pc_2" placeholder="设备故障概率值" @change="onGoState1Change"/></td>
+                </tr>
+              </table>
+
+              <!--            2.或门-->
+              <!--                <table class="goStateTable" v-show = "goStateBasic.goType === 2">
+                                <tr>
+                                  <td>输入信号数量</td>
+                                  <td>
+                                    <a-select v-model:value="goState2.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState2Change2">
+                                      <a-select-option :value = 1>输入1个信号</a-select-option>
+                                      <a-select-option :value = 2>输入2个信号</a-select-option>
+                                      <a-select-option :value = 3>输入3个信号</a-select-option>
+                                      <a-select-option :value = 4>输入4个信号</a-select-option>
+                                    </a-select>
+                                  </td>
+                                </tr>
+                              </table>-->
+
+
+              <!--            4.多信号发生器-->
+              <a-form-item label = "信号数量" v-show = "goStateBasic.goType === 4">
+                <a-select v-model:value="goState4.signalNumber" placeholder="请选择输出信号数量" @change="onGoState4Change2">
+                  <a-select-option :value = 1>输出1个信号</a-select-option>
+                  <a-select-option :value = 2>输出2个信号</a-select-option>
+                  <a-select-option :value = 3>输出3个信号</a-select-option>
+                  <a-select-option :value = 4>输出4个信号</a-select-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item v-for="item in goState4.signalStatusValues" :key="item" :label="item.signal"  v-show = "goStateBasic.goType == 4">
+                <!--          <a-input v-model:value="item.statusNumber" @change="onGoState4Change"></a-input>-->
+                <a-select v-model:value="item.statusNumber" placeholder="请选择信号状态数量" @change="onGoState4Change3()">
+                  <a-select-option :value = 1>1个状态</a-select-option>
+                  <a-select-option :value = 2>2个状态</a-select-option>
+                  <a-select-option :value = 3>3个状态</a-select-option>
+                  <a-select-option :value = 4>4个状态</a-select-option>
+                </a-select>
+                <div>
+                  <table>
+                    <tr   v-for="item2 in item.statusValues" :key="item2">
+                      <td style="width: 60px; font-size: 6px">
+                        {{item2.status}}概率:
+                      </td>
+                      <td>
+                        <a-input v-model:value="item2.value" size="small" @change="onGoState4Change"></a-input>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </a-form-item>
+              <table v-show="goState4.signalCombinationValues" class="goStateTable">
+                <tr>
+                  <th v-for="(item) in goState4.signalNumber" :key="item" style="width: 40px">信号{{item}}状态</th>
+                  <th>概率值</th>
+                </tr>
+                <tr v-for="item in goState4.signalCombinationValues" :key="item">
+                  <td v-for="item2 in item.comNum" :key="item2">{{item2}}</td>
+                  <td>
+                    <a-input v-model:value="item.value" @change="onGoState4Change"></a-input>
+                  </td>
+                </tr>
+              </table>
+
+
+
+              <!--            5.信号发生器-->
+              <a-form-item label = "状态数量" v-show = "goStateBasic.goType === 5">
+                <a-select v-model:value="goState5.signalStatusNumber" placeholder="请选择信号状态数量" @change="onGoState5Change2">
+                  <a-select-option :value = 3>3个状态</a-select-option>
+                  <a-select-option :value = 4>4个状态</a-select-option>
+                  <a-select-option :value = 5>5个状态</a-select-option>
+                  <a-select-option :value = 6>6个状态</a-select-option>
+                </a-select>
+              </a-form-item>
+              <table class="goStateTable" v-show = "goState5.signalStatusValues !== null">
+                <tr>
+                  <th>状态值</th>
+                  <th>概率值</th>
+                </tr>
+                <tr v-for="item in goState5.signalStatusValues" :key="item">
+                  <td>
+                    {{item.statusValue}}
+                  </td>
+                  <td>
+                    <a-input v-model:value="item.value" @change="onGoState5Change"></a-input>
+                  </td>
+                </tr>
+              </table>
+
+
+
+              <!--              8.延迟发生器-->
+              <a-form-item label = "状态数量" v-show = "goStateBasic.goType === 8">
+                <a-select v-model:value="goState8.statusNumber" placeholder="请选择信号状态数量" @change="onGoState8Change2">
+                  <!--                    <a-select-option :value = 1>1个状态</a-select-option>-->
+                  <!--                    <a-select-option :value = 2>2个状态</a-select-option>-->
+                  <a-select-option :value = 3>3个状态</a-select-option>
+                  <a-select-option :value = 4>4个状态</a-select-option>
+                  <a-select-option :value = 5>5个状态</a-select-option>
+                </a-select>
+              </a-form-item>
+              <table v-show = "goState8.statusValues !== null" class="goStateTable">
+                <tr>
+                  <th>状态值增量</th>
+                  <th>值</th>
+                  <th>对应概率</th>
+                  <th>值</th>
+                </tr>
+                <tr v-for="(item, index) in goState8.statusValues" :key="item">
+                  <td> D{{index+1}} </td>
+                  <td><a-input v-model:value="item.D" @change="onGoState8Change"></a-input></td>
+                  <td>P{{index+1}}</td>
+                  <td><a-input v-model:value="item.P" @change="onGoState8Change"></a-input></td>
+                </tr>
+              </table>
+
+
+              <!--              9.功能操作符-->
+              <a-form-item label = "状态数量" v-show = "goStateBasic.goType === 9">
+                <a-select v-model:value="goState9.differenceNumber" placeholder="请选择信号状态数量" @change="onGoState9Change2">
+                  <a-select-option :value = 1>1</a-select-option>
+                  <a-select-option :value = 2>2</a-select-option>
+                  <a-select-option :value = 3>3</a-select-option>
+                  <a-select-option :value = 4>4</a-select-option>
+                </a-select>
+              </a-form-item>
+              <table v-show = "goState9.differenceValues !== null" class="goStateTable">
+                <tr>
+                  <th>输入信号状态值之差</th>
+                  <th>值</th>
+                  <th>输出信号状态值增量</th>
+                  <th>值</th>
+                </tr>
+                <tr v-for="(item, index) in goState9.differenceValues" :key="item">
+                  <td> D{{index+1}} </td>
+                  <td><a-input v-model:value="item.X" @change="onGoState9Change"></a-input></td>
+                  <td>P{{index+1}}</td>
+                  <td><a-input v-model:value="item.Y" @change="onGoState9Change"></a-input></td>
+                </tr>
+              </table>
+
+              <!--              10.与门-->
+<!--              <a-form-item label = "信号数量" v-show = "goStateBasic.goType === 10">
+                <a-select v-model:value="goState10.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState10Change2">
+                  <a-select-option :value = 0>输入0个信号</a-select-option>
+                  <a-select-option :value = 1>输入1个信号</a-select-option>
+                  <a-select-option :value = 2>输入2个信号</a-select-option>
+                  <a-select-option :value = 3>输入3个信号</a-select-option>
+                  <a-select-option :value = 4>输入4个信号</a-select-option>
+                </a-select>
+              </a-form-item>-->
+
+              <!--              11.M取K门-->
+              <a-form-item label = "M: " v-show = "goStateBasic.goType === 11">
+                <a-select v-model:value="goState11.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState11Change2">
+                  <a-select-option :value = 1>输入1个信号</a-select-option>
+                  <a-select-option :value = 2>输入2个信号</a-select-option>
+                  <a-select-option :value = 3>输入3个信号</a-select-option>
+                  <a-select-option :value = 4>输入4个信号</a-select-option>
+                  <a-select-option :value = 5>输入5个信号</a-select-option>
+                  <a-select-option :value = 6>输入6个信号</a-select-option>
+                  <a-select-option :value = 7>输入7个信号</a-select-option>
+                  <a-select-option :value = 8>输入8个信号</a-select-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item label = "K: " v-show = "goStateBasic.goType === 11">
+                <a-select v-model:value="goState11.succeedNumber" placeholder="请选择取K" @change="onGoState11Change">
+                  <a-select-option :value = 1>取1</a-select-option>
+                  <a-select-option :value = 2>取2</a-select-option>
+                  <a-select-option :value = 3>取3</a-select-option>
+                  <a-select-option :value = 4>取4</a-select-option>
+                  <a-select-option :value = 5>取5</a-select-option>
+                  <a-select-option :value = 6>取6</a-select-option>
+                  <a-select-option :value = 7>取7</a-select-option>
+                  <a-select-option :value = 8>取8</a-select-option>
+                </a-select>
+              </a-form-item>
+
+              <!--              12.路径分离器-->
+              <a-form-item label = "分离路径个数 " v-show = "goStateBasic.goType === 12">
+                <a-select v-model:value="goState12.outSignalsNumber" placeholder="请选择分离数量" @change="onGoState12Change2">
+                  <a-select-option :value = 1>分离1个信号</a-select-option>
+                  <a-select-option :value = 2>分离2个信号</a-select-option>
+                  <a-select-option :value = 3>分离3个信号</a-select-option>
+                  <a-select-option :value = 4>分离4个信号</a-select-option>
+                  <a-select-option :value = 5>分离5个信号</a-select-option>
+                  <a-select-option :value = 6>分离6个信号</a-select-option>
+                </a-select>
+              </a-form-item>
+              <table v-show = "goState12.outStatusValues !== null" class="goStateTable">
+                <tr>
+                  <th>参数</th>
+                  <th>值</th>
+                </tr>
+                <tr v-for="item in goState12.outStatusValues" :key="item">
+                  <td>{{item.p}}</td>
+                  <td><a-input v-model:value="item.value" @change="onGoState12Change"></a-input></td>
+                </tr>
+              </table>
+
+              <!--              14.线性组合发生器-->
+              <a-form-item label = "组合信号数量" v-show = "goStateBasic.goType === 14">
+                <a-select v-model:value="goState14.inSignalsNumber" placeholder="请选择输入信号数量" @change="onGoState14Change2">
+                  <!--                  <a-select-option :value = 1>输入1个信号</a-select-option>-->
+                  <a-select-option :value = 2>输入2个信号</a-select-option>
+                  <a-select-option :value = 3>输入3个信号</a-select-option>
+                  <a-select-option :value = 4>输入4个信号</a-select-option>
+                  <a-select-option :value = 5>输入5个信号</a-select-option>
+                  <a-select-option :value = 6>输入6个信号</a-select-option>
+                </a-select>
+              </a-form-item>
+              <table v-show = "goState14.linearCoefficients !== null" class="goStateTable">
+                <tr>
+                  <th>系数</th>
+                  <th>值</th>
+                </tr>
+                <tr v-for="item in goState14.linearCoefficients" :key="item">
+                  <td>{{item.a}}</td>
+                  <td><a-input v-model:value="item.value" @change="onGoState14Change"></a-input></td>
+                </tr>
+              </table>
+
+
+              <!--              15.限值概率门-->
+              <table v-show = "goStateBasic.goType === 15" class="goStateTable">
+                <tr>
+                  <th></th>
+                  <th>参数</th>
+                  <th>值</th>
+                </tr>
+                <tr>
+                  <td  rowspan="2">输出信号状态值控制（V1~V2）</td>
+                  <td>V1</td>
+                  <td><a-input v-model:value="goState15.V1" @change="onGoState15Change"></a-input></td>
+                </tr>
+                <tr>
+                  <td>V2</td>
+                  <td><a-input v-model:value="goState15.V2" @change="onGoState15Change"></a-input></td>
+                </tr>
+                <tr>
+                  <td rowspan="2">输入信号状态值域值（V3~V4）</td>
+                  <td>V3</td>
+                  <td><a-input v-model:value="goState15.V3" @change="onGoState15Change"></a-input></td>
+                </tr>
+                <tr>
+                  <td>V4</td>
+                  <td><a-input v-model:value="goState15.V4" @change="onGoState15Change"></a-input></td>
+                </tr>
+                <tr>
+                  <td  rowspan="2">输入信号概率值域值（P1~P2）</td>
+                  <td>P1</td>
+                  <td><a-input v-model:value="goState15.P1" @change="onGoState15Change"></a-input></td>
+                </tr>
+                <tr>
+                  <td>P2</td>
+                  <td><a-input v-model:value="goState15.P2" @change="onGoState15Change"></a-input></td>
+                </tr>
+              </table>
+
+            </a-form>
           </div>
+
         </div>
+
+
       </a-col>
 
     </a-row>
@@ -509,7 +488,6 @@ export default defineComponent({
 
 
     //一些全局变量
-    let rightBarOptions = ref("property");
     let graph: Graph;
     let stencil: Stencil;
     const totalNodeNumber = ref<number>(0);
@@ -522,7 +500,38 @@ export default defineComponent({
     const edgeNumber = ref<any>(null);
     const isShowEdgeNumberInput = ref(false);
 
+    let selectedImage = ref<any>({});
+    let selectedImageSrc = ref<string>("");
+
+    const openFilePicker = ()=>{
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (event) => {
+        // const file = event.target.files[0];
+        const file = (event.target as HTMLInputElement).files[0];
+        insertImage(file);
+      };
+      input.click();
+    };
+
+    const insertImage = (file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const newImage = {
+          src: event.target.result,
+          alt: "图片描述"
+        };
+        selectedImage = newImage;
+        selectedImageSrc.value = newImage.src.toString();
+        // console.log(newImage.src.toString());
+      };
+      reader.readAsDataURL(file);
+    }
+
+
     //[:3]图元数据绑定通用
+    const lambda = ref();
     const goStateBasic: UnwrapRef<GoStateBasic> = reactive({
       deviceName: null,
       goType: null,
@@ -719,9 +728,15 @@ export default defineComponent({
 
     }
 
+    const onLambdaChange = ()=>{
+      curCell?.setData({
+        lambda: lambda.value,
+      });
+    }
+
     const onGoNumberChange = () => {
 
-      console.log("回车----------》");
+      console.log("onGoNumberChange----------》");
 
       //拦截非法输入
       if( goStateBasic.goNumber > totalNodeNumber.value ||
@@ -928,6 +943,7 @@ export default defineComponent({
     }
 
     const onGoState3_6_7_16_17Change = () => {
+
       curCell?.setData({
         Pc_0: goState3_6_7_16_17.Pc_0,
         Pc_1: goState3_6_7_16_17.Pc_1,
@@ -1548,7 +1564,7 @@ export default defineComponent({
         collapsable: true,
         // stencilGraphWidth: 260,
         stencilGraphHeight: window.innerHeight - 120,
-        search: {rect: true},
+        // search: {rect: false},
 
         groups: [
           /*{
@@ -1563,7 +1579,7 @@ export default defineComponent({
               marginX: 0,
             },
           },*/
-          {
+          /*{
             name: 'basic',
             title: '基础节点',
             graphHeight: 560,
@@ -1574,7 +1590,7 @@ export default defineComponent({
               //左侧边距
               marginX: 0,
             },
-          },
+          },*/
           {
             name: 'go-basic',
             title: 'GO法基本单元',
@@ -1596,17 +1612,14 @@ export default defineComponent({
     };
 
 
-
-
     //[3]左侧模板加载数据
     const stencilLoadData = () => {
       stencil.load([ rectBlock, circleBlock, ellipseBlock, polygonBlock, polylineBlock,
             pathBlock, imageBlock, textBlock],
           'basic');
 
-      stencil.load([goCell1, goCell2, goCell3, goCell4, goCell5, goCell6,
-        goCell7, goCell8, goCell9, goCell10, goCell11, goCell12,
-        goCell14, goCell15, goCell16, goCell17], 'go-basic');
+      stencil.load([goCell1, goCell2, goCell3, goCell5, goCell6,
+        goCell7, goCell8, goCell9, goCell10, goCell11,], 'go-basic');
 
 
     }
@@ -1693,23 +1706,17 @@ export default defineComponent({
         document.getElementById("goNumberInput").style.color = "black";
         document.getElementById("goNumberInput").style.border = "1px solid #d9d9d9";
 
-        // curCell?.attr('body/stroke', null);
 
         //新的节点赋值
         curCell = cell.cell;
 
         if( curCell.isNode() ){
-          //将labelText进行赋值（labelText有可能在text/text中，也有可能在label/text中）
-          /*let labelText = null;
-          if (cell.cell.getAttrs()?.text?.text)
-            labelText = cell.cell.getAttrs()?.text.text;
-          if (cell.cell.getAttrs()?.label?.text)
-            labelText = cell.cell.getAttrs()?.label.text;*/
-
 
           goStateBasic.deviceName = cell.cell.getData()?.deviceName;
           goStateBasic.goType = cell.cell.getData()?.goType;
           goStateBasic.goNumber = cell.cell.getData()?.goNumber;
+
+          lambda.value = cell.cell.getData()?.lambda;
 
           if( curCell.getData()?.goType == 3 ||
               curCell.getData()?.goType == 6 ||
@@ -1773,14 +1780,13 @@ export default defineComponent({
 
         }
 
-
-
-
       });
       //[@2.2]node:unselected
       graph.on('node:unselected', (cell) => {
         console.log("取消选择");
         console.log(cell);
+
+        lambda.value = null;
 
         goStateBasic.deviceName = null;
         goStateBasic.goType = null;
@@ -2081,6 +2087,7 @@ export default defineComponent({
 
         //获取所有的边
         const totalEdges = graph.getEdges();
+/*
 
         for (let i = 0; i < totalEdges.length; i++) {
           //如果边的编号 大于 被删除边的编号， 其编号 减 1， 并重置label
@@ -2100,6 +2107,7 @@ export default defineComponent({
           }
 
         }
+*/
 
         store.dispatch('removeEdge', cell.edge);
       });
@@ -2125,6 +2133,46 @@ export default defineComponent({
     }
 
 
+    let imagePercent = ref(100);
+    const zoomIn = ()=> {
+      if (imagePercent.value > 266){
+        return;
+      }
+      const imageVision = document.querySelector('#imageVision') as HTMLDivElement;
+      const rightVision = document.querySelector('#rightVision') as HTMLDivElement;
+      const imageVisionBox = document.querySelector('#imageVisionBox') as HTMLDivElement;
+
+      if ( imageVision.offsetHeight > (screenHeight.value - 300) ) {
+        imageVisionBox.style.height = screenHeight.value - 300 + 'px';
+      }
+      else {
+        imageVisionBox.style.height = imageVision.offsetHeight + 30 + 'px';
+      }
+
+      imageVision.style.width = imageVision.offsetWidth + 20 + 'px';
+      imagePercent.value = parseFloat(
+          ( imageVision.offsetWidth / rightVision.offsetWidth * 100 ).toFixed(2)
+      );
+
+    }
+    const zoomOut = ()=> {
+      if (imagePercent.value < 66){
+        return;
+      }
+      const imageVision = document.querySelector('#imageVision') as HTMLDivElement;
+      const rightVision = document.querySelector('#rightVision') as HTMLDivElement;
+      const imageVisionBox = document.querySelector('#imageVisionBox') as HTMLDivElement;
+
+      if ( imageVision.offsetHeight <= imageVisionBox.offsetHeight ) {
+        imageVisionBox.style.height = imageVision.offsetHeight + 10 + 'px';
+      }
+
+      imageVision.style.width = imageVision.offsetWidth - 20 + 'px';
+      imagePercent.value = parseFloat(
+          ( imageVision.offsetWidth / rightVision.offsetWidth * 100 ).toFixed(2)
+      );
+    }
+
 
     // const screenWidth = ref(window.innerWidth);
     const screenHeight = ref(window.innerHeight);
@@ -2135,9 +2183,13 @@ export default defineComponent({
       containerWidth.value = document.getElementById("panel")?.getBoundingClientRect().width;
 
       const property = document.querySelector('#property') as HTMLDivElement;
+      const rightVision = document.querySelector('#rightVision') as HTMLDivElement;
+
+      // property.style.height = (screenHeight.value - 300).toString()+"px";
+
+
 
       graph.resize( containerWidth.value, screenHeight.value - 120 );
-      property.style.height = (screenHeight.value - 140).toString()+"px";
 
     }
     //[!!!]onMounted()
@@ -2145,7 +2197,11 @@ export default defineComponent({
 
       window.addEventListener("resize", handleResize);
       const property = document.querySelector('#property') as HTMLDivElement;
-      property.style.height = (screenHeight.value - 140).toString()+"px";
+      const rightVision = document.querySelector('#rightVision') as HTMLDivElement;
+      const imageVision = document.querySelector('#imageVision') as HTMLDivElement;
+      imageVision.style.width = rightVision.offsetWidth - 10 + 'px';
+
+      // property.style.height = (screenHeight.value - 300).toString()+"px";
 
       buildGraph();       //创建画布
       buildStencil();     //左侧模板
@@ -2208,7 +2264,13 @@ export default defineComponent({
 
     return {
 
-      rightBarOptions,
+      selectedImage,
+      selectedImageSrc,
+      openFilePicker,
+      zoomIn,
+      zoomOut,
+      imagePercent,
+
       // screenWidth,
       containerWidth,
 
@@ -2217,6 +2279,7 @@ export default defineComponent({
 
       graphMove,
 
+      lambda,
       goStateBasic,
       goState3_6_7_16_17,
       goState1,
@@ -2245,6 +2308,7 @@ export default defineComponent({
       onGoNumberChange,
       onEdgeNumberChange,
 
+      onLambdaChange,
       onGoStateBasicChange,
       onGoState3_6_7_16_17Change,
       onGoState1Change,

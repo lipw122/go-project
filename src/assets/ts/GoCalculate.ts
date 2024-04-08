@@ -26,6 +26,7 @@ interface inOutValue{
 class GoCalculate1 extends BasicGoCalculate{
 
     goState: GoState1;
+    lambda: number;
 
     //[1]运算符通用计算
     calculateOutValues(): Array<inOutValue>{
@@ -188,6 +189,7 @@ class GoCalculate2 extends BasicGoCalculate{
 class GoCalculate3 extends BasicGoCalculate {
 
     goState: GoState3_6_7_16_17;
+    lambda: number;
 
     //[1]运算符通用计算
     calculateOutValues(): Array<inOutValue> {
@@ -251,6 +253,7 @@ class GoCalculate3 extends BasicGoCalculate {
 
 class GoCalculate5 {
     id: string;
+    lambda: number;
     basic: GoStateBasic;
     goState: GoState5;
     adjacentNodes: Array<any>;
@@ -326,13 +329,16 @@ class GoCalculate5 {
 
     //[2]前序工作已处理好，运算最终结果
     calculateCombinationOutValuesResult (): void {
-        console.log("前序工作已处理好，运算最终结果---->");
 
         for (let i = 0; i < this.goState.signalStatusNumber; i++) {
+            let tempAccumulationValue = 0;
+            for (let j = 0; j < i+1; j++) {
+                tempAccumulationValue += parseFloat(this.goState.signalStatusValues[j].value);
+            }
             this.outValues.push({
                 status: i,
                 value: this.goState.signalStatusValues[i].value,
-                accumulationValue: 0,
+                accumulationValue: tempAccumulationValue,
             });
         }
 
@@ -357,13 +363,14 @@ class GoCalculate5 {
 
     //清空输出信号
     clearOutValues(): void {
-        this.outValues = [];
+        this.outValues.splice( 0, this.outValues.length );
     }
 }
 
 class GoCalculate6 extends BasicGoCalculate {
 
     goState: GoState3_6_7_16_17;
+    lambda: number;
 
     //[1]运算符通用计算
     calculateOutValues(): Array<inOutValue> {
@@ -415,15 +422,16 @@ class GoCalculate6 extends BasicGoCalculate {
 
     //[2.1]设置输入状态1，并且如果可以，    计算输出状态
     setInValues1( _inValues1: Array<inOutValue> ): void {
+
         this.inValues1 = _inValues1;
-        if ( this.inValues2 != null){
+        if ( this.inValues2 != null && (this.inValues2.length > 0) ){
             this.outValues = this.calculateOutValues();
         }
     }
     //[2.2]设置输入状态2，并且如果可以，    计算输出状态
     setInValues2( _inValues2: Array<inOutValue> ): void {
         this.inValues2 = _inValues2;
-        if ( this.inValues1 != null){
+        if ( this.inValues1 != null && (this.inValues1.length > 0) ){
             this.outValues = this.calculateOutValues();
         }
     }
@@ -495,6 +503,7 @@ class GoCalculate6 extends BasicGoCalculate {
 class GoCalculate7 extends BasicGoCalculate {
 
     goState: GoState3_6_7_16_17;
+    lambda: number;
 
     //[1]运算符通用计算
     calculateOutValues(): Array<inOutValue> {
@@ -683,6 +692,9 @@ class GoCalculate10 extends BasicGoCalculate {
 
     //[2.1]设置输入信号
     setInValues( _inValues: Array<inOutValue> ): void {
+
+        console.log("正在向inValuesArray里push值");
+        console.log(this.inValuesArray);
         this.inValuesArray.push( _inValues );
         if ( this.inValuesArray.length >= this.preAdjacentNodes.length) {
             this.outValues = this.calculateOutValues();

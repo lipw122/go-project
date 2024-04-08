@@ -27,7 +27,7 @@ export default defineComponent({
 
   data() {
     return {
-      goFlowNumber: 80,
+      goFlowNumber: null,
     }
   },
   mounted() {
@@ -37,6 +37,8 @@ export default defineComponent({
     node.on('change:data', ({ current }) => {
 
       this.goFlowNumber = current.goFlowNumber;
+
+      console.log("change23:data");
 
     })
   },

@@ -44,21 +44,62 @@
       </a-col>
 
       <a-col :span="5">
-        <div class="config" >
-          <div style="float: left">
-            <a-radio-group v-model:value="rightBarOptions" size="small">
-              <a-radio-button value="property">属性</a-radio-button>
-              <a-radio-button value="structure">结构</a-radio-button>
-            </a-radio-group>
+        <div id="rightVision" class="config" style="overflow: auto">
+
+          <div   id="property" style="float: left; overflow: auto; width: 250px;">
+
+            <a-form>
+
+              <!--              基本信息-->
+              <table v-show = "goFlowStateBasic.goFlowType !== null" class="goFlowStateTable">
+                <tr>
+                  <th>参数名</th>
+                  <th>值</th>
+                </tr>
+                <tr>
+                  <td>
+                    设备名:
+                  </td>
+                  <td>
+                    <a-input v-model:value = "goFlowStateBasic.deviceName" placeholder="请输入设备名称" @change="onGoFlowStateBasicChange"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    类型:
+                  </td>
+                  <td>
+                    <a-input v-model:value = "goFlowStateBasic.goFlowType" readonly="readonly" placeholder="运算符类型"/>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    编号:
+                  </td>
+                  <td>
+                    <a-input id="goFlowNumberInput" v-model:value = "goFlowStateBasic.goFlowNumber"  placeholder="请输入GoFlow操作符编号"
+                             @change="onGoFlowNumberChange"/>
+                  </td>
+                </tr>
+              </table>
+
+
+              <!--            21.两状态单元-->
+              <table class="goStateTable" v-show = "goFlowStateBasic.goFlowType === 21">
+                <tr>
+                  <th>参数</th>
+                  <th>值</th>
+                </tr>
+                <tr>
+                  <td>成功概率(Pg)</td>
+                  <td><a-input v-model:value = "goFlowState21.Pg" placeholder="设备正常概率值" @change="onGoFlowState21Change"/></td>
+                </tr>
+              </table>
+
+            </a-form>
+
           </div>
 
-          <hr style="margin-top: 30px; color: #AFAFAF; "/>
-
-          <div style="float: left">
-            <div  id="property" v-show='rightBarOptions === "property"' style="float: left; overflow: auto; width: 250px;">
-
-            </div>
-          </div>
         </div>
 
       </a-col>
@@ -71,7 +112,7 @@
 
 <script lang="ts">
 
-import {defineComponent, ref} from "vue";
+import {defineComponent, reactive, ref, UnwrapRef} from "vue";
 import {Cell, Edge, Graph, Shape} from "@antv/x6";
 import {Stencil} from "@antv/x6-plugin-stencil";
 import {useStore} from "vuex";
@@ -94,6 +135,14 @@ import GoFlowCell37 from "@/components/go_flow_cells/GoFlowCell37.vue";
 import GoFlowCell38 from "@/components/go_flow_cells/GoFlowCell38.vue";
 import GoFlowCell39 from "@/components/go_flow_cells/GoFlowCell39.vue";
 import GoFlowCell40 from "@/components/go_flow_cells/GoFlowCell40.vue";
+import {
+  GoFlowState21,
+  GoFlowState26,
+  GoFlowState27, GoFlowState35, GoFlowState37, GoFlowState39,
+  GoFlowStateBasic,
+  GoState3_6_7_16_17,
+  GoStateBasic
+} from "@/assets/ts/interface";
 
 export default defineComponent({
   name: "GoFlowGraphDesign",
@@ -193,6 +242,60 @@ export default defineComponent({
           });
         }
       }
+    }
+
+
+
+
+    //[:3]图元数据绑定通用
+    const goFlowStateBasic: UnwrapRef<GoFlowStateBasic> = reactive({
+      deviceName: null,
+      goFlowType: null,
+      goFlowNumber: null,
+    });
+
+    //[:3]图元数据绑定通用2
+    const goFlowState21 : UnwrapRef<GoFlowState21> = reactive({
+      Pg: null,
+    });
+    const goFlowState26 : UnwrapRef<GoFlowState26> = reactive({
+      Pg: null,         //成功概率
+      Pp: null,         //提前导通
+    });
+    const goFlowState27 : UnwrapRef<GoFlowState27> = reactive({
+      Pg: null,         //成功概率
+      Pp: null,         //提前关断
+    });
+    const goFlowState35 : UnwrapRef<GoFlowState35> = reactive({
+      lambda: null,         //失效率
+    });
+    const goFlowState37 : UnwrapRef<GoFlowState37> = reactive({
+      lambda: null,         //失效率
+    });
+    const goFlowState39 : UnwrapRef<GoFlowState39> = reactive({
+      Po: null,         //成功打开概率
+      Ppo: null,        //提前打开概率
+      Pc: null,         //成功关闭概率
+      Ppc: null,        //提前关闭概率
+    });
+
+
+    //[@4]响应函数
+    const onGoFlowStateBasicChange = () => {
+      if( goFlowStateBasic.goFlowType === null ){
+        return;
+      }
+      curCell?.setData({
+        deviceName: goFlowStateBasic.deviceName,
+      })
+    }
+    const onGoFlowNumberChange = () => {
+      console.log("onGoNumberChange----------》");
+    }
+    const onGoFlowState21Change = () => {
+      curCell?.setData({
+        Pg: goFlowState21.Pg,
+      });
     }
 
 
@@ -798,7 +901,7 @@ export default defineComponent({
           node.setData({
             goFlowNumber: totalNodeNumber.value,
           })
-        }, 50);
+        }, 100);
 
         if ( node.getData()?.goFlowType === 21 ||
             node.getData()?.goFlowType === 22 ||
@@ -994,6 +1097,81 @@ export default defineComponent({
     const edgeEvent = () => {
       console.log("GoFlow-edgeEvent");
 
+      //[@2.1]node:selected
+      graph.on('node:selected', (cell) => {
+        console.log("选择Cell");
+        console.log(cell);
+        console.log(cell.cell.getAttrs());
+
+        //颜色置黑， 若有非法输入，后续变红
+        document.getElementById("goFlowNumberInput").style.color = "black";
+        document.getElementById("goFlowNumberInput").style.border = "1px solid #d9d9d9";
+
+        //新的节点赋值
+        curCell = cell.cell;
+
+        if( curCell.isNode() ){
+
+          goFlowStateBasic.deviceName = cell.cell.getData()?.deviceName;
+          goFlowStateBasic.goFlowType = cell.cell.getData()?.goFlowType;
+          goFlowStateBasic.goFlowNumber = cell.cell.getData()?.goFlowNumber;
+
+          if( curCell.getData()?.goFlowType == 21 ){
+            goFlowState21.Pg = cell.cell.getData()?.Pg;
+          }
+          else if( curCell.getData()?.goType == 26 ){
+            goFlowState26.Pg = cell.cell.getData()?.Pg;
+            goFlowState26.Pp = cell.cell.getData()?.Pp;
+          }
+          else if( curCell.getData()?.goType == 27 ){
+            goFlowState27.Pg = cell.cell.getData()?.Pg;
+            goFlowState27.Pp = cell.cell.getData()?.Pp;
+          }
+          else if( curCell.getData()?.goType == 35 ){
+            goFlowState35.lambda = cell.cell.getData()?.lambda;
+          }
+          else if( curCell.getData()?.goType == 37 ){
+            goFlowState37.lambda = cell.cell.getData()?.lambda;
+          }
+          else if( curCell.getData()?.goType == 39 ){
+            goFlowState39.Po = cell.cell.getData()?.Po;
+            goFlowState39.Ppo = cell.cell.getData()?.Ppo;
+            goFlowState39.Pc = cell.cell.getData()?.Pc;
+            goFlowState39.Ppc = cell.cell.getData()?.Ppc;
+          }
+
+        }
+
+
+      });
+      //[@2.2]node:unselected
+      graph.on('node:unselected', (cell) => {
+        console.log("取消选择");
+        console.log(cell);
+
+        goFlowStateBasic.deviceName = null;
+        goFlowStateBasic.goFlowType = null;
+        goFlowStateBasic.goFlowNumber = null;
+
+        goFlowState21.Pg = null;
+
+        goFlowState26.Pg = null;
+        goFlowState26.Pp = null;
+
+        goFlowState27.Pg = null;
+        goFlowState27.Pp = null;
+
+        goFlowState35.lambda = null;
+
+        goFlowState37.lambda = null;
+
+        goFlowState39.Po = null;
+        goFlowState39.Ppo = null;
+        goFlowState39.Pc = null;
+        goFlowState39.Ppc = null;
+
+      });
+
 
       //[@3.6]edge:mouseenter
       graph.on('edge:mouseenter', ({edge}) => {
@@ -1100,6 +1278,20 @@ export default defineComponent({
       openGraphFromFile,
       graphToolsResponse,
 
+
+      goFlowStateBasic,
+      goFlowState21,
+      goFlowState26,
+      goFlowState27,
+      goFlowState35,
+      goFlowState37,
+      goFlowState39,
+
+      onGoFlowNumberChange,
+      onGoFlowStateBasicChange,
+      onGoFlowState21Change,
+
+
       rightBarOptions,
       screenHeight,
       totalNodeNumber,
@@ -1125,6 +1317,20 @@ export default defineComponent({
 .config {
   overflow: auto;
   background-color: #ffffff;
+}
+
+
+.goFlowStateTable {
+  width: 230px;
+  margin: 10px auto;
+}
+.goFlowStateTable tr th {
+  border: 1px solid black;
+  background-color: #94ffdf;
+}
+
+.goFlowStateTable tr td {
+  border: 1px solid black;
 }
 
 

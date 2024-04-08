@@ -24,7 +24,7 @@ export abstract class BasicGoCalculate {
     //运算符 1、3、
     inValues: Array<inOutValue>;
     //运算符 2、10、
-    inValuesArray: Array<Array<inOutValue>> = [];
+    inValuesArray: Array<any> = [];
     //运算符 6、7、
     inValues1: Array<inOutValue>;
     inValues2: Array<inOutValue>;
@@ -34,7 +34,6 @@ export abstract class BasicGoCalculate {
 
     //[2]前序工作已处理好，运算最终结果
     calculateCombinationOutValuesResult (): void {
-        console.log("前序工作已处理好，运算最终结果---->");
 
         const processedCombinationOutValues = handleCombination( this.initialSignalsCombinationOutValues, this.noDuplicateInitialSignals);
 
@@ -45,26 +44,35 @@ export abstract class BasicGoCalculate {
         // console.log( resultAccumulation );
 
         for (let i = 0; i < resultAccumulation.length; i++) {
+            let value = 0;
+            if ( i === 0 ){
+                value = resultAccumulation[0]
+            } else {
+                value = resultAccumulation[i] - resultAccumulation[i-1]
+            }
             this.outValues.push({
                 status: i,
-                value: 0,
+                value: value,
                 accumulationValue: resultAccumulation[i],
             });
         }
 
     }
 
+    clearInValuesArray(): void {
+        this.inValuesArray.splice(0,this.inValuesArray.length);
+    }
 
     //[1.1]清空输出信号
     clearOutValues(): void {
-        this.outValues = [];
+        this.outValues.splice( 0, this.outValues.length );
     }
     //[1.2]清空输入信号
     clearInValues(): void {
         this.inValues = [];
-        this.inValuesArray = [];
         this.inValues1 = [];
         this.inValues2 = [];
+        this.inValuesArray.splice( 0, this.inValuesArray.length );
     }
     //[1.3]获取输出信号
     getOutValues(): Array<inOutValue> {

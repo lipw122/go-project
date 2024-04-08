@@ -6,6 +6,37 @@ interface GoStateBasic {
     goType: number,
     goNumber: any,
 }
+
+interface GoFlowStateBasic {
+    deviceName: any,
+    goFlowType: number,
+    goFlowNumber: any,
+}
+interface GoFlowState21 {
+    Pg: number
+}
+
+interface GoFlowState26 {
+    Pg: number,         //成功概率
+    Pp: number,         //提前导通
+}
+interface GoFlowState27 {
+    Pg: number,         //成功概率
+    Pp: number,         //提前关断
+}
+interface GoFlowState35 {
+    lambda: number,         //失效率
+}
+interface GoFlowState37 {
+    lambda: number,         //失效率
+}
+interface GoFlowState39 {
+    Po: number,         //成功打开概率
+    Ppo: number,        //提前打开概率
+    Pc: number,         //成功关闭概率
+    Ppc: number,        //提前关闭概率
+}
+
 interface GoState3_6_7_16_17 {
     Pc_0: any,
     Pc_1: any,
@@ -86,6 +117,14 @@ interface InitialSignalsCombinationOutValue {
 
 export {
     GoStateBasic,
+    GoFlowStateBasic,
+    GoFlowState21,
+    GoFlowState26,
+    GoFlowState27,
+    GoFlowState35,
+    GoFlowState37,
+    GoFlowState39,
+
     GoState3_6_7_16_17,
     GoState1,
     GoState2,

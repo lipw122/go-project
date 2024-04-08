@@ -2,8 +2,11 @@ import {GoCalculate5} from "@/assets/ts/GoCalculate";
 import {generateVariableCombinations, removeDuplicatesById} from "@/assets/ts/MyUtils";
 import {SignalStatusInfo} from "@/assets/ts/interface";
 import Decimal from "decimal.js"
+import { ref, watch } from 'vue';
+import store from "@/store";
 
 class GoGraph {
+    public nowHandleNodeNum = 0;
     private nodes;
     // private inputNodes = [];
     // private operationNodes = [];
@@ -21,7 +24,8 @@ class GoGraph {
     }
 
     clearNode():void {
-        this.nodes.clear();
+        // this.nodes.clear();
+        this.nodes = new Map();
     }
 
     addNode(node):void {
@@ -32,8 +36,6 @@ class GoGraph {
         const node1 = this.nodes.get(sourceId);
         const node2 = this.nodes.get(targetId);
 
-        /*console.log(node1);
-        console.log(node2);*/
         if (node1 && node2) {
             let isHas = false;
             //判断  adjacentNodes 是否存在 要加入的节点
@@ -78,38 +80,48 @@ class GoGraph {
         });
 
         //【第一步】循环计算 初始 所有信号发生器
+        console.log("myGraph.calculate();【第一步】循环计算 初始 所有信号发生器------------->");
         inputNodeMap.forEach( ( inputNodeMapValue, inputNodeMapKey )=>{
 
             //计算所有的 信号发生器5   规范 outValues
             inputNodeMapValue.setOutValues();
 
+
+
             //循环所有 inputNode[i].adjacentNodes 中的所有id
             for (let k = 0; k < inputNodeMapValue.adjacentNodes.length; k++) {
 
+
                 const tempOperationNode = operationNodeMap.get( inputNodeMapValue.adjacentNodes[k].id );
 
+
                 if ( inputNodeMapValue.adjacentNodes[k].port === "in") {
+
                     tempOperationNode.setInValues( inputNodeMapValue.getOutValues() );
                     //传递初始信号
                     tempOperationNode.addInitialSignal( inputNodeMapValue.initialSignal );
                 }
                 else if ( inputNodeMapValue.adjacentNodes[k].port === "in1") {
+
                     tempOperationNode.setInValues1( inputNodeMapValue.getOutValues() );
+
                     //传递初始信号
                     tempOperationNode.addInitialSignal( inputNodeMapValue.initialSignal );
+
                 }
                 else if ( inputNodeMapValue.adjacentNodes[k].port === "in2") {
+
                     tempOperationNode.setInValues2( inputNodeMapValue.getOutValues() );
                     //传递初始信号
                     tempOperationNode.addInitialSignal( inputNodeMapValue.initialSignal );
                 }
-
             }
 
 
         });
 
         //【第二步】循环计算 初始 所有 非 信号发生器
+        console.log("myGraph.calculate();【第二步】循环计算 初始 所有 非 信号发生器");
         let calculateWhile = 0;
         while ( operationNodeMap.size > 0) {
             calculateWhile++;
@@ -120,9 +132,17 @@ class GoGraph {
                 //如果该节点 outValues 不为空，则循环将 outValues 添加到 邻接节点的 inValues
                 if ( operationNodeMapValue.outValues && operationNodeMapValue.outValues.length > 0 ) {
                     //遍历所有后续节点
+                    // console.log( operationNodeMapValue );
+                    // console.log( "operationNodeMapValue.adjacentNodes.length"+operationNodeMapValue.adjacentNodes.length)
                     for (let j = 0; j < operationNodeMapValue.adjacentNodes.length; j++) {
 
                         const tempOperationNode = operationNodeMap.get( operationNodeMapValue.adjacentNodes[j].id );
+
+                        /*console.log( operationNodeMapValue.adjacentNodes[j].id );
+                        console.log(operationNodeMap);
+                        console.log("j"+j);
+                        console.log("tempOperationNode------>");
+                        console.log(tempOperationNode);*/
 
                         if ( operationNodeMapValue.adjacentNodes[j].port === 'in' ) {
                             tempOperationNode.setInValues(operationNodeMapValue.getOutValues());
@@ -137,14 +157,18 @@ class GoGraph {
                             tempOperationNode.addInitialSignals( operationNodeMapValue.initialSignals );
                         }
 
-                        operationNodeMap.delete( operationNodeMapKey );
-
                     }
+
+                    operationNodeMap.delete( operationNodeMapKey );
+
+
                 }
 
             });
 
             if ( calculateWhile > 1000){
+                console.log("myGraph.calculate();发生错误，强制退出计算");
+
                 break;
             }
 
@@ -235,7 +259,7 @@ class GoGraph {
         }
 
     }
-    //[2.3]循环运算所有 (组合运算后) 结果
+    //[2.3]循环运算所有 (组合运算后) 结果 (暂时不用)
     calculateAllCombinationOutValuesResult(): void {
         const inputNode = [];
         const operationNode = [];
@@ -259,9 +283,7 @@ class GoGraph {
 
     }
 
-
-    //[3.1]循环清除所有输出信号
-    clearAllOutValues(): void {
+    clearAllInitialSignals(): void {
         const inputNode = [];
         const operationNode = [];
         this.nodes.forEach((value, key)=>{
@@ -273,12 +295,42 @@ class GoGraph {
             }
         });
 
-        for (let i = 0; i < inputNode.length; i++) {
+        for (let i = 0; i < operationNode.length; i++) {
+            operationNode[i].initialSignals = [];
+        }
+    }
+
+    //[3.1]循环清除所有输出信号
+    clearAllOutValues(): void {
+        const inputNode = [];
+        const operationNode = [];
+        this.nodes.forEach((value, key)=>{
+            if ( value.basic.goType === 5 ) {
+                inputNode.push(value);
+
+                value.clearOutValues();
+            }
+            else {
+                operationNode.push(value);
+
+                value.clearOutValues();
+                value.clearInValuesArray();
+            }
+        });
+
+        /*for (let i = 0; i < inputNode.length; i++) {
             inputNode[i].clearOutValues();
+            console.log("正在清空输出信号");
+            inputNode[i].outValues = [];
+            console.log(inputNode[i].outValues);
         }
         for (let i = 0; i < operationNode.length; i++) {
             operationNode[i].clearOutValues();
-        }
+            operationNode[i].clearInValuesArray();
+            console.log("正在清空输出信号");
+            operationNode[i].outValues = [];
+            console.log( operationNode[i].outValues );
+        }*/
 
     }
     //[3.2]循环清除所有输入信号
@@ -333,12 +385,11 @@ class GoGraph {
 
         const statusNumber = inputNode[0].goState.signalStatusNumber;
         const signalNumber = inputNode.length;
-        // console.log(signalNumber);
-        // console.log(statusNumber);
+
 
 
         const variableCombinations = generateVariableCombinations(signalNumber, statusNumber);
-        console.log(variableCombinations);
+        // console.log(variableCombinations);
 
         //设置 循环信号
         const _allSignalStatusInfos:Array<Array<SignalStatusInfo>> = [];
@@ -395,12 +446,10 @@ class GoGraph {
 
         const statusNumber = inputNode[0].goState.signalStatusNumber;
         const signalNumber = inputNode.length;
-        // console.log(signalNumber);
-        // console.log(statusNumber);
 
 
         const variableCombinations = generateVariableCombinations(signalNumber, statusNumber);
-        console.log(variableCombinations);
+        // console.log(variableCombinations);
 
         //设置 循环信号
         const _allSignalStatusInfos:Array<Array<SignalStatusInfo>> = [];

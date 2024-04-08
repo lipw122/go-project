@@ -22,6 +22,17 @@ const routes = [
     },
     {
         //路由path
+        path: '/dynamic',
+        //路由name
+        name: '/dynamic',
+        //路由组件
+        component: () => import('@/components/Dynamic.vue'),
+        meta: {
+            keepAlive: true     //需要缓存
+        }
+    },
+    {
+        //路由path
         path: '/calculate',
         //路由name
         name: '/calculate',
